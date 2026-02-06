@@ -1,0 +1,30 @@
+<div class="top-bar">
+  <h3>Reading Demo</h3>
+  <div>
+    Page {{ currentPageSignal() }} / {{ totalPages() }}
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress" [style.width.%]="getProgressPercent()"></div>
+  </div>
+</div>
+
+<div class="text-display" (mouseup)="handleTextSelection()">
+  <div [innerHTML]="sanitizedContentSignal()"></div>
+</div>
+
+<div class="pagination">
+  <button (click)="prevPage()">Prev</button>
+  <button (click)="nextPage()">Next</button>
+</div>
+
+<div class="word-list">
+  <h4>Word List</h4>
+  <ul>
+    <li *ngFor="let entry of wordTableSignal()">
+      {{entry.word}} ({{entry.count}}) - {{entry.sentence}}
+    </li>
+  </ul>
+  <input type="file" (change)="importWordTable($any($event.target).files[0])" />
+  <button (click)="exportWordTable()">Export Word Table</button>
+</div>

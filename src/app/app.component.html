@@ -1,18 +1,9 @@
 <!-- src/app/app.html -->
 
-<nav class="main-nav">
-  <a routerLink="/">Home</a>
-  <a routerLink="/reading-list">Reading List</a>
-  <a routerLink="/vocabulary-list">Vocabulary</a>
-</nav>
+<h1>{{ title() }}</h1>
+
+<app-header></app-header>
 
 <main class="main">
-  <div class="content">
-    <div class="left-side">
-      <p>Congratulations! Your app is running. 🎉</p>
-    </div>
-    <div class="divider"></div>
-    <div class="right-side">
-    </div>
-  </div>
+  <router-outlet></router-outlet>
 </main>
