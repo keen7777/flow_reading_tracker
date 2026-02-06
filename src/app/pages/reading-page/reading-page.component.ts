@@ -1,18 +1,14 @@
 import { Component, signal, computed, effect } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule, DecimalPipe } from '@angular/common';
+import { WordEntry } from '../../models/word-entry';
+import { VocabularyTableComponent } from '../../components/vocabulary-table/vocabulary-table.component';
 
-interface WordEntry {
-    word: string;
-    count: number;
-    sentence?: string;
-    definition?: string; // future usage
-}
 
 @Component({
     selector: 'app-reading-page',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, VocabularyTableComponent],
     templateUrl: './reading-page.component.html',
     styleUrls: ['./reading-page.component.scss'],
 })
@@ -91,6 +87,7 @@ export class ReadingPageComponent {
     }
 
     handleTextSelection() {
+        const now = Date.now();
         const selection = window.getSelection()?.toString().trim();
         if (!selection) return;
 
@@ -101,8 +98,12 @@ export class ReadingPageComponent {
 
         if (index >= 0) {
             words[index].count += 1; // 已存在单词，次数 +1
+            words[index].lastSeenAt = now;
         } else {
-            words.push({ word: selection, count: 1, sentence });
+            words.push({
+                word: selection, count: 1, firstAddedAt: now,
+                lastSeenAt: now, sentence
+            });
         }
 
         this.wordTableSignal.set([...words]);
@@ -117,6 +118,13 @@ export class ReadingPageComponent {
         }
         return '';
     }
+    //-------------------delete word-------------------
+    deleteWord(entry: WordEntry) {
+        const words = this.wordTableSignal().filter(w => w.word !== entry.word);
+        this.wordTableSignal.set(words);
+        this.updateSanitizedPage();
+    }
+
 
     // ------------------- 文件导入 -------------------
     onFileSelected(event: Event) {

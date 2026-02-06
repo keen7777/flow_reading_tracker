@@ -1,0 +1,25 @@
+<div class="vocab-table">
+
+  <!-- 排序 -->
+  <div *ngIf="allowSort" class="sort-bar">
+    <button (click)="onSortChange('firstSeen')">First added</button>
+    <button (click)="onSortChange('lastSeen')">Recent</button>
+    <button (click)="onSortChange('count')">Frequency</button>
+    <button (click)="onSortChange('alpha')">A–Z</button>
+  </div>
+
+  <ul>
+    <li *ngFor="let entry of words">
+      <span class="word">{{ entry.word }}</span>
+      <span class="count">{{ entry.count }}</span>
+
+      <button
+        *ngIf="allowDelete"
+        (click)="onDelete(entry)">
+        Delete
+      </button>
+    </li>
+  </ul>
+
+</div>
+

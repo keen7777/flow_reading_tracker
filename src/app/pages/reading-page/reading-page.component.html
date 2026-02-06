@@ -22,9 +22,14 @@
   <!-- 单词表 -->
   <ul class="word-table">
     <li *ngFor="let entry of wordTableSignal()">
-      {{ entry.word }} ({{ entry.count }}) — {{ entry.sentence }}
+      {{ entry.word }} ({{ entry.count }}) : {{ entry.sentence }} {{ entry.lastSeenAt }}
     </li>
   </ul>
+  <!-- word table component -->
+  <app-vocabulary-table [words]="wordTableSignal()" [allowDelete]="true" (deleteWord)="deleteWord($event)">
+  </app-vocabulary-table>
+
+
 
   <!-- 单词表导入/导出 -->
   <div class="word-table-controls">
