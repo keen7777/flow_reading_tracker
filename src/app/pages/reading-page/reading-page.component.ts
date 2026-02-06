@@ -86,16 +86,6 @@ export class ReadingPageComponent {
     }
 
 
-
-
-    getCurrentSentence(word: string): string {
-        const text = this.getCurrentPageWords().join(' ');
-        const sentences = text.split(/[.!?]/);
-        for (let s of sentences) {
-            if (s.includes(word)) return s.trim();
-        }
-        return '';
-    }
     //-------------------delete word-------------------
     deleteWord(entry: WordEntry) {
         const words = this.wordTableSignal().filter(w => w.word !== entry.word);

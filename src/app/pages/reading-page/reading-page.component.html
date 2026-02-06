@@ -7,16 +7,19 @@
     <input type="file" (change)="onFileSelected($event)" />
   </div>
 
+  <!-- test text display -->
+  <div class="text-display">
+    <app-text-display [pageText]="getCurrentPageWords().join(' ')" [highlightWords]="wordTableSignal()"
+      (wordSelected)="handleWordSelected($event)">
+    </app-text-display>
+  </div>
 
-  <!-- 分页按钮 -->
+<!-- 分页按钮 -->
   <div class="pagination">
     <button (click)="prevPage()" [disabled]="currentPageSignal() <= 1">Previous</button>
     <span>Page {{ currentPageSignal() }} / {{ totalPages }}</span>
     <button (click)="nextPage()" [disabled]="currentPageSignal() >= totalPages">Next</button>
   </div>
-
-  <!-- test text display -->
-  <text-display [text]="getCurrentPageWords().join(' ')" (wordSelected)="handleWordSelected($event)"></text-display>
 
 
   <!-- reading progress -->
@@ -31,7 +34,7 @@
 
   <!-- word table 导入/导出 -->
   <div class="word-table-controls">
-    <button (click)="exportWordTable()">Export Word Table</button>
     <label>Import Word Table:</label>
     <input type="file" (change)="onImportFile($event)" />
+    <button (click)="exportWordTable()">Export Word Table</button>
   </div>
