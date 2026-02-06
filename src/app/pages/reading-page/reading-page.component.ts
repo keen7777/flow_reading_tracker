@@ -1,81 +1,95 @@
-import { Component, effect, signal, computed } from '@angular/core';
+import { Component, signal, computed, effect } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { CommonModule, DecimalPipe } from '@angular/common';
 
-// interface of word
 interface WordEntry {
     word: string;
     count: number;
     sentence?: string;
-    definition?: string; // later usages
+    definition?: string; // future usage
 }
 
 @Component({
     selector: 'app-reading-page',
     standalone: true,
+    imports: [CommonModule],
     templateUrl: './reading-page.component.html',
-    styleUrls: ['./reading-page.component.scss']
+    styleUrls: ['./reading-page.component.scss'],
 })
 export class ReadingPageComponent {
+    WORDS_PER_PAGE = 50;
 
-    // -------------------
-    // Signals
-    // -------------------
-    WORDS_PER_PAGE = 200;
-
-    fullTextSignal = signal<string[]>([]); // current page's word
-    currentPageSignal = signal(1);         // current page number
-    wordTableSignal = signal<WordEntry[]>([]); // word table
-    sanitizedContentSignal = signal<SafeHtml>(''); // sanitize current page highlight
-
-    totalPages = computed(() => {
-        return Math.ceil(this.fullTextSignal().length / this.WORDS_PER_PAGE);
-    });
-
+    fullTextSignal = signal<string[]>([]); // 全文拆词
+    currentPageSignal = signal(1);
+    wordTableSignal = signal<WordEntry[]>([]);
+    sanitizedContentSignal = signal<SafeHtml>(''); // 当前页高亮内容
 
     constructor(private sanitizer: DomSanitizer) {
-        this.loadFromLocalStorage(); // load the reading history progress from storage
-        this.effectUpdatePageContent(); // update current page if sth has changed
+        this.loadDefaultText();
+        this.loadFromLocalStorage();
+        this.effectUpdatePageContent();
     }
 
-    // -------------------
-    // method: load text（from github or paste by user）
-    // -------------------
+    // ------------------- 默认加载 assets 文本 -------------------
+    async loadDefaultText() {
+        try {
+            const res = await fetch('/assets/docs/pride-and-prejudice-ch01.txt'); // <-- 加了 /
+            if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+            const text = await res.text();
+            this.loadText(text);
+        } catch (err) {
+            console.error('Failed to load default text', err);
+        }
+    }
+
+
+    // ------------------- 加载文本 -------------------
     loadText(text: string) {
-        // split to get single word
         const words = text.split(/\s+/);
         this.fullTextSignal.set(words);
         this.currentPageSignal.set(1);
         this.updateSanitizedPage();
     }
 
-    // -------------------
-    // method：get current page's context
-    // -------------------
+    // ------------------- 分页相关 -------------------
+    get totalPages() {
+        return Math.ceil(this.fullTextSignal().length / this.WORDS_PER_PAGE);
+    }
+
     getCurrentPageWords(): string[] {
         const start = (this.currentPageSignal() - 1) * this.WORDS_PER_PAGE;
         return this.fullTextSignal().slice(start, start + this.WORDS_PER_PAGE);
     }
 
-    // -------------------
-    // method: update sanitizedContentSignal（for innerHTML's highlight）
-    // -------------------
+    prevPage() {
+        if (this.currentPageSignal() > 1) this.currentPageSignal.update(v => v - 1);
+        this.updateSanitizedPage();
+    }
+
+    nextPage() {
+        if (this.currentPageSignal() < this.totalPages) this.currentPageSignal.update(v => v + 1);
+        this.updateSanitizedPage();
+    }
+
+    // ------------------- 高亮和单词表 -------------------
     updateSanitizedPage() {
         const pageText = this.getCurrentPageWords().join(' ');
 
-        // highlight known word
         let highlighted = pageText;
         this.wordTableSignal().forEach(entry => {
             const regex = new RegExp(`\\b${entry.word}\\b`, 'gi');
-            highlighted = highlighted.replace(regex,
-                `<span class="highlight" style="background-color:rgba(255,255,0,${Math.min(0.2 + 0.2 * entry.count, 1)})">${entry.word}</span>`);
+            highlighted = highlighted.replace(
+                regex,
+                `<span class="highlight" style="background-color:rgba(255,255,0,${Math.min(
+                    0.2 + 0.2 * entry.count,
+                    1
+                )})">${entry.word}</span>`
+            );
         });
 
         this.sanitizedContentSignal.set(this.sanitizer.bypassSecurityTrustHtml(highlighted));
     }
 
-    // -------------------
-    // method：select the word
-    // -------------------
     handleTextSelection() {
         const selection = window.getSelection()?.toString().trim();
         if (!selection) return;
@@ -83,21 +97,18 @@ export class ReadingPageComponent {
         const words = this.wordTableSignal();
         const index = words.findIndex(e => e.word.toLowerCase() === selection.toLowerCase());
 
-        // get the original sentence
         const sentence = this.getCurrentSentence(selection);
 
         if (index >= 0) {
-            words[index].count += 1; // already exist word, then cnt+1
+            words[index].count += 1; // 已存在单词，次数 +1
         } else {
             words.push({ word: selection, count: 1, sentence });
         }
+
         this.wordTableSignal.set([...words]);
         this.updateSanitizedPage();
     }
 
-    // -------------------
-    // method：get the original sentence from the text, use simple punctuation to trim
-    // -------------------
     getCurrentSentence(word: string): string {
         const text = this.getCurrentPageWords().join(' ');
         const sentences = text.split(/[.!?]/);
@@ -107,26 +118,24 @@ export class ReadingPageComponent {
         return '';
     }
 
-    // -------------------
-    // splitting pages
-    // -------------------
-    prevPage() {
-        if (this.currentPageSignal() > 1) this.currentPageSignal.update(v => v - 1);
-        this.updateSanitizedPage();
-    }
-
-    nextPage() {
-        if (this.currentPageSignal() < this.totalPages()) {
-            this.currentPageSignal.update(v => v + 1);
+    // ------------------- 文件导入 -------------------
+    onFileSelected(event: Event) {
+        const input = event.target as HTMLInputElement;
+        if (input.files && input.files.length > 0) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = e => {
+                this.loadText(e.target?.result as string);
+            };
+            reader.readAsText(file);
         }
-        this.updateSanitizedPage();
     }
 
-    // -------------------
-    // export
-    // -------------------
+    // ------------------- 单词表导出/导入 -------------------
     exportWordTable() {
-        const blob = new Blob([JSON.stringify(this.wordTableSignal(), null, 2)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify(this.wordTableSignal(), null, 2)], {
+            type: 'application/json',
+        });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -134,23 +143,25 @@ export class ReadingPageComponent {
         a.click();
     }
 
-    // -------------------
-    // import wordtable
-    // -------------------
     importWordTable(file: File) {
         const reader = new FileReader();
         reader.onload = e => {
             const imported: WordEntry[] = JSON.parse(e.target?.result as string);
             this.wordTableSignal.set(imported);
-            // after import, refresh to update the highlight
             this.updateSanitizedPage();
         };
         reader.readAsText(file);
     }
 
-    // -------------------
-    // localstorage, save and load
-    // -------------------
+    onImportFile(event: Event) {
+        const input = event.target as HTMLInputElement;
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        this.importWordTable(file);
+    }
+
+
+    // ------------------- localStorage -------------------
     saveToLocalStorage() {
         localStorage.setItem('currentPage', this.currentPageSignal().toString());
         localStorage.setItem('wordTable', JSON.stringify(this.wordTableSignal()));
@@ -163,9 +174,7 @@ export class ReadingPageComponent {
         this.wordTableSignal.set(table);
     }
 
-    // -------------------
-    // effect：current page changes or vocabulary-list changes
-    // -------------------
+    // ------------------- effect: 自动保存 + 更新高亮 -------------------
     effectUpdatePageContent() {
         effect(() => {
             this.updateSanitizedPage();
@@ -173,10 +182,11 @@ export class ReadingPageComponent {
         });
     }
 
-    // -------------------
-    // reading progress
-    // -------------------
+    // ------------------- 阅读进度 -------------------
     getProgressPercent(): number {
-        return Math.min(100, (this.currentPageSignal() * this.WORDS_PER_PAGE / this.fullTextSignal().length) * 100);
+        return Math.min(
+            100,
+            (this.currentPageSignal() * this.WORDS_PER_PAGE) / this.fullTextSignal().length * 100
+        );
     }
 }

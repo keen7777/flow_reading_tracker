@@ -1,21 +1,33 @@
-.text-display {
+.reading-page {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.reading-text {
   border: 1px solid #ccc;
-  padding: 10px;
+  padding: 1rem;
   min-height: 200px;
+  margin: 1rem 0;
+  white-space: pre-wrap;
 }
 
 .highlight {
-  background-color: rgb(80, 234, 154);
+  cursor: pointer;
 }
 
-.progress-bar {
-  width: 100%;
-  background: #eee;
-  height: 10px;
-  margin-top: 5px;
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
 }
 
 .progress {
-  height: 100%;
-  background: #649bee;
+  margin-bottom: 0.5rem;
+}
+
+.word-table-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }

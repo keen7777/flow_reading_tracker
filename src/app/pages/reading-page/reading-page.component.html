@@ -1,30 +1,36 @@
-<div class="top-bar">
-  <h3>Reading Demo</h3>
-  <div>
-    Page {{ currentPageSignal() }} / {{ totalPages() }}
+<div class="reading-page">
+  <h2>Reading Page</h2>
+
+  <!-- 文件上传 -->
+  <input type="file" (change)="onFileSelected($event)" />
+
+  <!-- 当前页文本 -->
+  <div class="reading-text" (mouseup)="handleTextSelection()" [innerHTML]="sanitizedContentSignal()"></div>
+
+  <!-- 分页按钮 -->
+  <div class="pagination">
+    <button (click)="prevPage()" [disabled]="currentPageSignal() <= 1">Previous</button>
+    <span>Page {{ currentPageSignal() }} / {{ totalPages }}</span>
+    <button (click)="nextPage()" [disabled]="currentPageSignal() >= totalPages">Next</button>
   </div>
 
-  <div class="progress-bar">
-    <div class="progress" [style.width.%]="getProgressPercent()"></div>
+  <!-- 阅读进度 -->
+  <div class="progress">
+    Progress: {{ getProgressPercent() | number:'1.0-1' }} %
   </div>
-</div>
 
-<div class="text-display" (mouseup)="handleTextSelection()">
-  <div [innerHTML]="sanitizedContentSignal()"></div>
-</div>
-
-<div class="pagination">
-  <button (click)="prevPage()">Prev</button>
-  <button (click)="nextPage()">Next</button>
-</div>
-
-<div class="word-list">
-  <h4>Word List</h4>
-  <ul>
+  <!-- 单词表 -->
+  <ul class="word-table">
     <li *ngFor="let entry of wordTableSignal()">
-      {{entry.word}} ({{entry.count}}) - {{entry.sentence}}
+      {{ entry.word }} ({{ entry.count }}) — {{ entry.sentence }}
     </li>
   </ul>
-  <input type="file" (change)="importWordTable($any($event.target).files[0])" />
-  <button (click)="exportWordTable()">Export Word Table</button>
+
+  <!-- 单词表导入/导出 -->
+  <div class="word-table-controls">
+    <button (click)="exportWordTable()">Export Word Table</button>
+    <input type="file" (change)="onImportFile($event)" />
+
+
+  </div>
 </div>
