@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { VocabularyTableComponent } from './vocabulary-table.component';
+import { TextDisplayComponent } from './text-display.component';
 
-describe('VocabularyTable', () => {
-  let component: VocabularyTableComponent;
-  let fixture: ComponentFixture<VocabularyTableComponent>;
+describe('TextDisplayComponent', () => {
+  let component: TextDisplayComponent;
+  let fixture: ComponentFixture<TextDisplayComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [VocabularyTableComponent]
+      imports: [TextDisplayComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(VocabularyTableComponent);
+    fixture = TestBed.createComponent(TextDisplayComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

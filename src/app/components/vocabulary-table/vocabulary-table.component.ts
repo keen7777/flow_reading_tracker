@@ -6,7 +6,8 @@ import { WordEntry } from '../../models/word-entry';
   selector: 'app-vocabulary-table',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './vocabulary-table.component.html'
+  templateUrl: './vocabulary-table.component.html',
+  styleUrls: ['./vocabulary-table.component.scss'],
 })
 export class VocabularyTableComponent {
   @Input() words: WordEntry[] = [];

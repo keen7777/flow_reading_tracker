@@ -2,10 +2,11 @@
   <h2>Reading Page</h2>
 
   <!-- 文件上传 -->
-  <input type="file" (change)="onFileSelected($event)" />
+  <div class="text-upload">
+    <label>Upload Reading Text:</label>
+    <input type="file" (change)="onFileSelected($event)" />
+  </div>
 
-  <!-- 当前页文本 -->
-  <div class="reading-text" (mouseup)="handleTextSelection()" [innerHTML]="sanitizedContentSignal()"></div>
 
   <!-- 分页按钮 -->
   <div class="pagination">
@@ -14,28 +15,23 @@
     <button (click)="nextPage()" [disabled]="currentPageSignal() >= totalPages">Next</button>
   </div>
 
-  <!-- 阅读进度 -->
+  <!-- test text display -->
+  <text-display [text]="getCurrentPageWords().join(' ')" (wordSelected)="handleWordSelected($event)"></text-display>
+
+
+  <!-- reading progress -->
   <div class="progress">
     Progress: {{ getProgressPercent() | number:'1.0-1' }} %
   </div>
 
-  <!-- 单词表 -->
-  <ul class="word-table">
-    <li *ngFor="let entry of wordTableSignal()">
-      {{ entry.word }} ({{ entry.count }}) : {{ entry.sentence }} {{ entry.lastSeenAt }}
-    </li>
-  </ul>
   <!-- word table component -->
   <app-vocabulary-table [words]="wordTableSignal()" [allowDelete]="true" (deleteWord)="deleteWord($event)">
   </app-vocabulary-table>
 
 
-
-  <!-- 单词表导入/导出 -->
+  <!-- word table 导入/导出 -->
   <div class="word-table-controls">
     <button (click)="exportWordTable()">Export Word Table</button>
+    <label>Import Word Table:</label>
     <input type="file" (change)="onImportFile($event)" />
-
-
   </div>
-</div>
