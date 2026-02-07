@@ -7,7 +7,7 @@ import { VocabularyListComponent } from './pages/vocabulary-list/vocabulary-list
 export const routes: Routes = [
   { path: '', component: HomePageComponent },
   { path: 'reading-list', component: ReadingListComponent },
-  { path: 'reading-page', component: ReadingPageComponent },
+  { path: 'reading/:id', component: ReadingPageComponent },
   { path: 'vocabulary-list', component: VocabularyListComponent },
   { path: '**', redirectTo: '' }
 ];

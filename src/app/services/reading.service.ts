@@ -1,35 +1,47 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { ReadingItem } from '../models/reading-item';
 import { VocabularyTable } from '../models/vocabulary-table';
 import { WordEntry } from '../models/word-entry';
 
 @Injectable({ providedIn: 'root' })
 export class ReadingService {
-  private readings: ReadingItem[] = [];
-  private vocabTables: VocabularyTable[] = [];
+  /** 所有文章列表，使用 signal 实现自动更新 */
+  private readingsSignal = signal<ReadingItem[]>([]);
+
+  /** 所有词表，用 readingId 快速索引 */
+  private vocabTables: Record<string, VocabularyTable> = {};
 
   // ----------------- Reading List -----------------
-  getReadings() {
-    return this.readings;
+
+  /** 根据 ID 获取文章 */
+  getReadingById(id: string): ReadingItem | undefined {
+    return this.readingsSignal().find(r => r.id === id);
   }
 
-  getReadingById(id: string) {
-    return this.readings.find(r => r.id === id);
+  /** 获取全部文章 */
+  getAllReadings(): ReadingItem[] {
+    return this.readingsSignal();
   }
 
-  addReading(title: string, assetPath: string): ReadingItem {
-    const newReading: ReadingItem = {
-      id: crypto.randomUUID(),
-      title,
-      assetPath
-    };
-    this.readings.push(newReading);
-    return newReading;
+  /** 添加新文章（本地上传） */
+  addNewReading(item: { title: string, content?: string }): ReadingItem {
+  const newReading: ReadingItem = { id: crypto.randomUUID(), ...item };
+  this.readingsSignal.update(list => [...list, newReading]);
+  this.addVocabTable(newReading.id, `word table-${item.title}`);
+  return newReading;
+}
+
+
+  /** 更新文章内容（如用户上传本地 txt 文件后） */
+  updateReadingContent(id: string, content: string) {
+    this.readingsSignal.update(list => {
+      return list.map(r => r.id === id ? { ...r, content } : r);
+    });
   }
 
   // ----------------- Vocabulary Tables -----------------
   getVocabByReadingId(readingId: string): VocabularyTable | undefined {
-    return this.vocabTables.find(v => v.readingId === readingId);
+    return this.vocabTables[readingId];
   }
 
   addVocabTable(readingId: string, name: string): VocabularyTable {
@@ -39,7 +51,7 @@ export class ReadingService {
       name,
       entries: []
     };
-    this.vocabTables.push(table);
+    this.vocabTables[readingId] = table;
     return table;
   }
 

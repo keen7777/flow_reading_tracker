@@ -1,6 +1,24 @@
 <h2>Reading List</h2>
+
+<!-- 新增文章按钮 -->
+<!-- 文件选择上传 -->
+<button type="button" class="upload-btn" (click)="fileInput.click()">
+  + Add New Reading
+</button>
+
+<!-- 隐藏 input -->
+<input
+  #fileInput
+  type="file"
+  accept=".txt"
+  (change)="onFileSelected($event)"
+  hidden
+/>
+
+<!-- 文章列表 -->
 <ul>
-  <li *ngFor="let item of readingItems">
-    {{ item.title }} - {{ item.author }}
+  <li *ngFor="let reading of readings">
+    <!-- 点击跳转到 ReadingPage -->
+    <a [routerLink]="['/reading', reading.id]">{{ reading.title }}</a>
   </li>
 </ul>
