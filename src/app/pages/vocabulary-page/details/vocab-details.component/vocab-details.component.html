@@ -1,17 +1,22 @@
-<table *ngIf="wordEntriesSignal().length > 0">
-  <tr>
-    <th>Word</th>
-    <th>Count</th>
-    <th>Last Seen</th>
-  </tr>
+<div *ngIf="wordEntriesSignal().length > 0; else emptyState">
+  <table>
+    <thead>
+      <tr>
+        <th>Word</th>
+        <th>Count</th>
+        <th>Last Seen</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let word of wordEntriesSignal()">
+        <td>{{ word.word }}</td>
+        <td>{{ word.count }}</td>
+        <td>{{ word.lastSeenAt | date:'short' }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
-  <tr *ngFor="let entry of wordEntriesSignal()">
-    <td>{{ entry.word }}</td>
-    <td>{{ entry.count }}</td>
-    <td>{{ entry.lastSeenAt | date:'short' }}</td>
-  </tr>
-</table>
-
-<p *ngIf="wordEntriesSignal().length === 0">
-  No words in this table.
-</p>
+<ng-template #emptyState>
+  <p>No words in this table.</p>
+</ng-template>

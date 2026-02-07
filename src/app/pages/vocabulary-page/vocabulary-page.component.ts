@@ -1,7 +1,5 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VocabularyTable } from '../../models/vocabulary-table';
-import { ReadingService } from '../../services/reading.service';
 import { VocabDetailsComponent } from './details/vocab-details.component/vocab-details.component';
 import { VocabSidebarComponent } from './sidebar/vocab-sidebar.component/vocab-sidebar.component';
 
@@ -13,12 +11,6 @@ import { VocabSidebarComponent } from './sidebar/vocab-sidebar.component/vocab-s
   styleUrls: ['./vocabulary-page.component.scss']
 })
 export class VocabularyPageComponent {
-  /** 选中的词表 ID，用于右侧 detail */
-  selectedTableId = signal<string | null>(null);
-
-  /** 从 Sidebar 选中词表时调用 */
-  onTableSelected(readingId: string) {
-    this.selectedTableId.set(readingId);
-  }
-
+  /** 当前选中的词表 ID，空字符串表示未选择 */
+  selectedTableId = signal<string>('');
 }

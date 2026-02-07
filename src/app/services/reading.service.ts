@@ -30,9 +30,7 @@ export class ReadingService {
 
   // ---------- Reading ----------
 
-  getAllReadings() {
-    return this.readingsSignal();
-  }
+  allReadings = computed(() => this.readingsSignal());
 
   addNewReading(item: { title: string; content?: string }): ReadingItem {
     const reading: ReadingItem = {

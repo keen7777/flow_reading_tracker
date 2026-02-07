@@ -1,10 +1,11 @@
 <div class="vocabulary-page-container" style="display: flex; gap: 20px; height: 100%;">
   <!-- 左侧 Sidebar -->
-  <app-vocab-sidebar (selectTable)="onTableSelected($event)">
+  <app-vocab-sidebar
+    (selectTable)="selectedTableId.set($event)">
   </app-vocab-sidebar>
 
-
-  <!-- 右侧 Details：只有在 tableId 存在时才创建 -->
-  <app-vocab-details *ngIf="selectedTableId() as tableId" [tableId]="tableId">
+  <!-- 右侧 Details -->
+  <app-vocab-details *ngIf="selectedTableId()"
+    [tableId]="selectedTableId()">
   </app-vocab-details>
 </div>

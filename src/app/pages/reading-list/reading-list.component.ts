@@ -7,18 +7,19 @@ import { ReadingItem } from '../../models/reading-item';
 @Component({
   selector: 'app-reading-list',
   standalone: true,
-  imports: [CommonModule,RouterModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './reading-list.component.html',
   styleUrls: ['./reading-list.component.scss'],
 })
 export class ReadingListComponent {
 
-  constructor(private readingService: ReadingService) {}
+  constructor(private readingService: ReadingService) { }
 
   /** ------------------- 使用 getter 动态获取最新文章列表 ------------------- */
   get readings(): ReadingItem[] {
-    return this.readingService.getAllReadings();
+    return this.readingService.allReadings(); // 注意调用 computed 得到当前值
   }
+
 
   /** ------------------- 本地上传文件创建新文章 ------------------- */
   onFileSelected(event: Event) {
