@@ -1,1 +1,16 @@
-<div class="text-display" (mouseup)="onMouseUp()" [innerHTML]="sanitizedHtml"></div>
+<div class="paragraph" *ngFor="let para of paragraphs">
+
+    <span 
+        class="word" 
+        *ngFor="let word of para.split(/\s+/)" 
+        (click)="onWordClick(word, para)"
+        [class.highlight]="isHighlighted(word)" 
+        [style.backgroundColor]="
+            isHighlighted(word)
+                ? getHighlightColor(word)
+                : 'transparent'
+            ">
+        {{ word }}
+    </span>
+
+</div>

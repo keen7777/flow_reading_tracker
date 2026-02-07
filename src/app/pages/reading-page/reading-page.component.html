@@ -1,20 +1,34 @@
 <div class="reading-page">
   <h2>Reading Page</h2>
+  <!-- color btn display -->
+  <app-toggle-switch 
+    label="Discrete Mode" 
+    [checked]="highlightModeDiscreteSignal()"
+    (checkedChange)="highlightModeDiscreteSignal.set($event)">
+  </app-toggle-switch>
 
-  <!-- 文件上传 -->
+
+
+  <!-- upload file -->
   <div class="text-upload">
     <label>Upload Reading Text:</label>
     <input type="file" (change)="onFileSelected($event)" />
   </div>
-
+  
   <!-- test text display -->
-  <div class="text-display">
-    <app-text-display [pageText]="getCurrentPageWords().join(' ')" [highlightWords]="wordTableSignal()"
-      (wordSelected)="handleWordSelected($event)">
-    </app-text-display>
-  </div>
+   <div class="text-display">
+    <app-text-display 
+    [paragraphs]="currentPageParagraphs" 
+    [highlightWords]="wordTableSignal()"
+    [highlightMode]="highlightModeDiscreteSignal() ? 'discrete' : 'continuous'" 
+    (wordSelected)="handleWordSelected($event)">
+  </app-text-display>
+   </div>
+  
 
-<!-- 分页按钮 -->
+
+
+  <!-- pagination btn -->
   <div class="pagination">
     <button (click)="prevPage()" [disabled]="currentPageSignal() <= 1">Previous</button>
     <span>Page {{ currentPageSignal() }} / {{ totalPages }}</span>
@@ -32,7 +46,7 @@
   </app-vocabulary-table>
 
 
-  <!-- word table 导入/导出 -->
+  <!-- word table import and export -->
   <div class="word-table-controls">
     <label>Import Word Table:</label>
     <input type="file" (change)="onImportFile($event)" />

@@ -4,19 +4,21 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { WordEntry } from '../../models/word-entry';
 import { VocabularyTableComponent } from '../../components/vocabulary-table/vocabulary-table.component';
 import { TextDisplayComponent } from './text-display.component/text-display.component';
-
+import { ToggleSwitchComponent } from '../../components/toggle-switch.component/toggle-switch.component';
 
 @Component({
     selector: 'app-reading-page',
     standalone: true,
-    imports: [CommonModule, VocabularyTableComponent, TextDisplayComponent],
+    imports: [CommonModule, VocabularyTableComponent, TextDisplayComponent, ToggleSwitchComponent],
     templateUrl: './reading-page.component.html',
     styleUrls: ['./reading-page.component.scss'],
 })
 export class ReadingPageComponent {
-    WORDS_PER_PAGE = 50;
+    highlightModeDiscreteSignal = signal(false);
+    WORDS_PER_PAGE = 200;
 
-    fullTextSignal = signal<string[]>([]); // 全文拆词
+    // 现在：全文 → 页 → 段落
+    fullTextSignal = signal<string[][]>([]);
     currentPageSignal = signal(1);
     wordTableSignal = signal<WordEntry[]>([]);
 
@@ -41,20 +43,53 @@ export class ReadingPageComponent {
 
     // ------------------- 加载文本 -------------------
     loadText(text: string) {
-        const words = text.split(/\s+/);
-        this.fullTextSignal.set(words);
+        // 1️⃣ 按段落拆分（空行）
+        const paragraphs = text
+            .split(/\n\s*\n/)
+            .map(p => p.trim())
+            .filter(p => p.length > 0);
+
+        const pages: string[][] = [];
+        let currentPage: string[] = [];
+        let wordCount = 0;
+
+        // 2️⃣ 按段落累积，直到 ≥200 词
+        for (const para of paragraphs) {
+            const paraWordCount = para.split(/\s+/).length;
+
+            if (
+                wordCount + paraWordCount > this.WORDS_PER_PAGE &&
+                currentPage.length > 0
+            ) {
+                pages.push(currentPage);
+                currentPage = [];
+                wordCount = 0;
+            }
+
+            currentPage.push(para);
+            wordCount += paraWordCount;
+        }
+
+        // 3️⃣ 最后一页
+        if (currentPage.length > 0) {
+            pages.push(currentPage);
+        }
+
+        this.fullTextSignal.set(pages);
         this.currentPageSignal.set(1);
     }
 
+
     // ------------------- 分页相关 -------------------
     get totalPages() {
-        return Math.ceil(this.fullTextSignal().length / this.WORDS_PER_PAGE);
+        return this.fullTextSignal().length;
     }
 
-    getCurrentPageWords(): string[] {
-        const start = (this.currentPageSignal() - 1) * this.WORDS_PER_PAGE;
-        return this.fullTextSignal().slice(start, start + this.WORDS_PER_PAGE);
+
+    get currentPageParagraphs(): string[] {
+        return this.fullTextSignal()[this.currentPageSignal() - 1] || [];
     }
+
 
     prevPage() {
         if (this.currentPageSignal() > 1) this.currentPageSignal.update(v => v - 1);
@@ -157,9 +192,10 @@ export class ReadingPageComponent {
 
     // ------------------- 阅读进度 -------------------
     getProgressPercent(): number {
-        return Math.min(
-            100,
-            (this.currentPageSignal() * this.WORDS_PER_PAGE) / this.fullTextSignal().length * 100
+        if (this.totalPages === 0) return 0;
+        return Math.round(
+            (this.currentPageSignal() / this.totalPages) * 100
         );
     }
+
 }
