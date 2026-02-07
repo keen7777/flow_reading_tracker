@@ -2,17 +2,10 @@
   <h2>Reading Page</h2>
   <!-- color btn display -->
   <app-toggle-switch 
-    label="Discrete Mode" 
+    label="Dark Mode" 
     [checked]="highlightModeDiscreteSignal()"
     (checkedChange)="highlightModeDiscreteSignal.set($event)">
   </app-toggle-switch>
-
-
-  <!-- upload file -->
-  <div class="text-upload">
-    <label>Upload Reading Text:</label>
-    <input type="file" (change)="onFileSelected($event)" />
-  </div>
   
   <!-- test text display -->
    <div class="text-display">
