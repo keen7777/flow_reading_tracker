@@ -13,47 +13,52 @@ interface PersistedState {
 
 @Injectable({ providedIn: 'root' })
 export class ReadingService {
-  /** 所有文章列表，使用 signal 实现自动更新 */
   private readingsSignal = signal<ReadingItem[]>([]);
-
-  /** 所有词表，用 readingId 快速索引 */
   private vocabTables: Record<string, VocabularyTable> = {};
 
   constructor() {
     this.loadFromStorage();
   }
 
-  // ----------------- Reading List -----------------
+  // ---------- Reading ----------
 
-  /** 根据 ID 获取文章 */
-  getReadingById(id: string): ReadingItem | undefined {
-    return this.readingsSignal().find(r => r.id === id);
-  }
-
-  /** 获取全部文章 */
   getAllReadings(): ReadingItem[] {
     return this.readingsSignal();
   }
 
-  /** 添加新文章（本地上传） */
-  addNewReading(item: { title: string, content?: string }): ReadingItem {
-    const newReading: ReadingItem = { id: crypto.randomUUID(), ...item };
-    this.readingsSignal.update(list => [...list, newReading]);
-    this.addVocabTable(newReading.id, `word table-${item.title}`);
+  getReadingById(id: string): ReadingItem | undefined {
+    return this.readingsSignal().find(r => r.id === id);
+  }
+
+  addNewReading(item: { title: string; content?: string }): ReadingItem {
+    const reading: ReadingItem = {
+      id: crypto.randomUUID(),
+      title: item.title,
+      content: item.content
+    };
+
+    this.readingsSignal.update(list => [...list, reading]);
+    this.addVocabTable(reading.id, `Word Table - ${reading.title}`);
     this.saveToStorage();
-    return newReading;
+    return reading;
   }
 
-
-  /** 更新文章内容（如用户上传本地 txt 文件后） */
-  updateReadingContent(id: string, content: string) {
+  /** 删除文章：必须同时删除对应词表 */
+  deleteReading(readingId: string) {
     this.readingsSignal.update(list =>
-      list.map(r => r.id === id ? { ...r, content } : r)
+      list.filter(r => r.id !== readingId)
     );
-    this.saveToStorage(); // ⭐
+    delete this.vocabTables[readingId];
+    this.saveToStorage();
   }
 
-  // ----------------- Vocabulary Tables -----------------
+  // ---------- Vocabulary Table ----------
+
+  /** 所有词表（用于 Vocabulary List 页面） */
+  getAllVocabTables(): VocabularyTable[] {
+    return Object.values(this.vocabTables);
+  }
+
   getVocabByReadingId(readingId: string): VocabularyTable | undefined {
     return this.vocabTables[readingId];
   }
@@ -70,51 +75,73 @@ export class ReadingService {
     return table;
   }
 
-  // ----------------- WordEntry 操作 -----------------
+  /** 整体替换词表（导入 JSON 等） */
+  replaceWordTable(readingId: string, entries: WordEntry[]) {
+    const table = this.vocabTables[readingId];
+    if (!table) return;
+
+    table.entries = entries;
+    this.saveToStorage();
+  }
+
+  /** 只删除词表本身，不影响 reading */
+  deleteVocabTable(readingId: string) {
+    delete this.vocabTables[readingId];
+    this.saveToStorage();
+  }
+
+  // ---------- Word ----------
+
   addWord(readingId: string, word: string, sentence?: string) {
-    let table = this.getVocabByReadingId(readingId);
+    let table = this.vocabTables[readingId];
     if (!table) {
-      table = this.addVocabTable(readingId, `词表-${readingId}`);
+      table = this.addVocabTable(readingId, `Word Table`);
     }
 
     const now = Date.now();
-    const existing = table.entries.find(e => e.word.toLowerCase() === word.toLowerCase());
+    const existing = table.entries.find(e => e.word === word);
     if (existing) {
       existing.count++;
       existing.lastSeenAt = now;
     } else {
-      table.entries.push({ word, count: 1, firstAddedAt: now, lastSeenAt: now, sentence });
+      table.entries.push({
+        word,
+        count: 1,
+        firstAddedAt: now,
+        lastSeenAt: now,
+        sentence
+      });
     }
     this.saveToStorage();
   }
 
   deleteWord(readingId: string, word: string) {
-    const table = this.getVocabByReadingId(readingId);
+    const table = this.vocabTables[readingId];
     if (!table) return;
+
     table.entries = table.entries.filter(e => e.word !== word);
     this.saveToStorage();
   }
 
-  //----------------load and save from localstorage:
+  // ---------- persistence ----------
+
   private loadFromStorage() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
 
-    try {
-      const parsed: PersistedState = JSON.parse(raw);
-      this.readingsSignal.set(parsed.readings || []);
-      this.vocabTables = parsed.vocabTables || {};
-    } catch (e) {
-      console.error('Failed to parse storage', e);
-    }
+    const parsed = JSON.parse(raw);
+    this.readingsSignal.set(parsed.readings || []);
+    this.vocabTables = parsed.vocabTables || {};
   }
 
   private saveToStorage() {
-    const state: PersistedState = {
-      readings: this.readingsSignal(),
-      vocabTables: this.vocabTables
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        readings: this.readingsSignal(),
+        vocabTables: this.vocabTables
+      })
+    );
   }
-
 }
+

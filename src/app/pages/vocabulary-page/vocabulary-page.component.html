@@ -1,0 +1,16 @@
+<h2>Vocabulary Tables</h2>
+
+<div *ngFor="let table of vocabTables" class="table-card">
+  <h3>{{ table.name }}</h3>
+  <p>Total words: {{ table.entries.length }}</p>
+
+  <button (click)="deleteTable(table.readingId)">
+    Delete Word Table
+  </button>
+
+  <ul>
+    <li *ngFor="let entry of table.entries | slice:0:5">
+      {{ entry.word }} ({{ entry.count }})
+    </li>
+  </ul>
+</div>
