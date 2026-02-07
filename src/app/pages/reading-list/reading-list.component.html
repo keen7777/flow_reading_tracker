@@ -7,18 +7,13 @@
 </button>
 
 <!-- 隐藏 input -->
-<input
-  #fileInput
-  type="file"
-  accept=".txt"
-  (change)="onFileSelected($event)"
-  hidden
-/>
+<input #fileInput type="file" accept=".txt" (change)="onFileSelected($event)" hidden />
 
 <!-- 文章列表 -->
 <ul>
   <li *ngFor="let reading of readings">
     <!-- 点击跳转到 ReadingPage -->
     <a [routerLink]="['/reading', reading.id]">{{ reading.title }}</a>
+    <button (click)="deleteReading(reading.id)">Delete</button>
   </li>
 </ul>

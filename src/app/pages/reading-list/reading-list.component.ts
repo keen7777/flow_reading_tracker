@@ -44,4 +44,11 @@ export class ReadingListComponent {
 
     reader.readAsText(file);
   }
+  // delete one reading item:
+   /** 删除文章（连同词表） */
+  deleteReading(readingId: string) {
+    if (!confirm('Delete this reading and its word table?')) return;
+    this.readingService.deleteReading(readingId);
+  }
+
 }
