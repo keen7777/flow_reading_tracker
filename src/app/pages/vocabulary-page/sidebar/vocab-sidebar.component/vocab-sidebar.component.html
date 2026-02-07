@@ -1,8 +1,7 @@
 <ul>
-  <li
-    *ngFor="let table of vocabTablesSignal()"
-    (click)="select(table)"
-  >
-    {{ table.name }} ({{ table.entries.length }})
-  </li>
+  <div *ngFor="let table of vocabTablesSignal()">
+  <span (click)="select(table)">{{ table.name }} total counts: ({{ table.entries.length }})</span>
+  <button (click)="deleteTable(table)">Delete</button>
+</div>
+
 </ul>

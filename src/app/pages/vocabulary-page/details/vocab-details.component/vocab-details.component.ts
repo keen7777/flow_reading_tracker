@@ -32,4 +32,10 @@ export class VocabDetailsComponent {
       console.log(`VocabDetails updated, ${entries.length} words for tableId:`, this.tableId);
     });
   }
+
+  /** 删除单词条目 */
+  deleteWord(entry: WordEntry) {
+    if (!confirm(`Delete word "${entry.word}"?`)) return;
+    this.readingService.deleteWord(this.tableId, entry.word);
+  }
 }
