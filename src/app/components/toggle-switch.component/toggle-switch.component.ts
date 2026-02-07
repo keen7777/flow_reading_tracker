@@ -6,13 +6,7 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-toggle-switch',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <label class="switch">
-      <input type="checkbox" [checked]="checked" (change)="onToggle($event)" />
-      <span class="slider"></span>
-      {{ label }}
-    </label>
-  `,
+  templateUrl: './toggle-switch.component.html',
   styleUrls: ['./toggle-switch.component.scss'],
 })
 export class ToggleSwitchComponent {
