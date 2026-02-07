@@ -1,0 +1,14 @@
+.vocab-page {
+  display: flex;
+  height: 100%;
+
+  app-vocab-sidebar {
+    width: 250px;
+    border-right: 1px solid #ccc;
+  }
+
+  app-vocab-details {
+    flex: 1;
+    padding: 16px;
+  }
+}

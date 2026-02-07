@@ -1,24 +1,20 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common'; // NgFor 所在模块
-import { ReadingService } from '../../services/reading.service';
+import { Component, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { VocabularyTable } from '../../models/vocabulary-table';
+import { ReadingService } from '../../services/reading.service';
+import { VocabDetailsComponent } from './details/vocab-details.component/vocab-details.component'; 
+import { VocabSidebarComponent } from './sidebar/vocab-sidebar.component/vocab-sidebar.component';
 
 @Component({
   selector: 'app-vocabulary-page',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './vocabulary-page.component.html'
+  imports: [CommonModule, VocabSidebarComponent, VocabDetailsComponent],
+  templateUrl: './vocabulary-page.component.html',
+  styleUrls: ['./vocabulary-page.component.scss']
 })
 export class VocabularyPageComponent {
-  constructor(private readingService: ReadingService) {}
+  // signal: 当前选中的词表 ID
+  selectedTableId = signal<string | null>(null);
 
-  get vocabTables(): VocabularyTable[] {
-    return this.readingService.getAllVocabTables();
-  }
-
-  deleteTable(readingId: string) {
-    if (!confirm('Delete this word table only?')) return;
-    this.readingService.deleteVocabTable(readingId);
-  }
+  constructor(public readingService: ReadingService) {}
 }
-

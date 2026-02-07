@@ -1,0 +1,9 @@
+<h3>Vocabulary Tables</h3>
+<ul>
+  <li *ngFor="let table of tables" 
+      [class.selected]="selectedTableId() === table.id"
+      (click)="onSelectTable(table.id)">
+    {{ table.name }} ({{ getWordCount(table) }} words)
+    <button (click)="deleteTable(table.id); $event.stopPropagation()">Delete</button>
+  </li>
+</ul>
