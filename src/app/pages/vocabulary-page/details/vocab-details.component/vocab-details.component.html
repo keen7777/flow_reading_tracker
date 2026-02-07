@@ -1,27 +1,17 @@
-<div *ngIf="tableId(); else emptyState">
-  <h3>Word Entries</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Word</th>
-        <th>Count</th>
-        <th>Sentence</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let entry of entries">
-        <td>{{ entry.word }}</td>
-        <td>{{ entry.count }}</td>
-        <td>{{ entry.sentence || '-' }}</td>
-        <td>
-          <button (click)="deleteWord(entry.word)">Delete</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+<table *ngIf="wordEntriesSignal().length > 0">
+  <tr>
+    <th>Word</th>
+    <th>Count</th>
+    <th>Last Seen</th>
+  </tr>
 
-<ng-template #emptyState>
-  <p>Select a word table to view details.</p>
-</ng-template>
+  <tr *ngFor="let entry of wordEntriesSignal()">
+    <td>{{ entry.word }}</td>
+    <td>{{ entry.count }}</td>
+    <td>{{ entry.lastSeenAt | date:'short' }}</td>
+  </tr>
+</table>
+
+<p *ngIf="wordEntriesSignal().length === 0">
+  No words in this table.
+</p>

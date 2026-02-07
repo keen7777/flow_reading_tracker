@@ -1,4 +1,4 @@
-import { Component, Input, signal } from '@angular/core';
+import { Component, Input, Signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReadingService } from '../../../../services/reading.service';
 import { WordEntry } from '../../../../models/word-entry';
@@ -7,22 +7,21 @@ import { WordEntry } from '../../../../models/word-entry';
   selector: 'app-vocab-details',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './vocab-details.component.html',
-  styleUrls: ['./vocab-details.component.scss']
+  templateUrl: './vocab-details.component.html'
 })
 export class VocabDetailsComponent {
-  @Input() tableId: any; // signal 绑定
 
-  constructor(public readingService: ReadingService) {}
+  /** 父组件传入的 readingId */
+  @Input({ required: true }) tableId!: string;
 
-  get entries(): WordEntry[] {
-    if (!this.tableId()) return [];
-    const table = this.readingService.getVocabByReadingId(this.tableId());
-    return table?.entries || [];
-  }
+  /** 当前词表 entries（自动更新） */
+  wordEntriesSignal: Signal<WordEntry[]>;
 
-  deleteWord(word: string) {
-    if (!this.tableId()) return;
-    this.readingService.deleteWord(this.tableId(), word);
+  constructor(private readingService: ReadingService) {
+    this.wordEntriesSignal = computed(() => {
+      const table =
+        this.readingService.vocabTablesSignal()[this.tableId];
+      return table?.entries ?? [];
+    });
   }
 }

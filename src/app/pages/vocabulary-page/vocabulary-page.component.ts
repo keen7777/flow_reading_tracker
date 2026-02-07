@@ -2,7 +2,7 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VocabularyTable } from '../../models/vocabulary-table';
 import { ReadingService } from '../../services/reading.service';
-import { VocabDetailsComponent } from './details/vocab-details.component/vocab-details.component'; 
+import { VocabDetailsComponent } from './details/vocab-details.component/vocab-details.component';
 import { VocabSidebarComponent } from './sidebar/vocab-sidebar.component/vocab-sidebar.component';
 
 @Component({
@@ -13,8 +13,12 @@ import { VocabSidebarComponent } from './sidebar/vocab-sidebar.component/vocab-s
   styleUrls: ['./vocabulary-page.component.scss']
 })
 export class VocabularyPageComponent {
-  // signal: 当前选中的词表 ID
+  /** 选中的词表 ID，用于右侧 detail */
   selectedTableId = signal<string | null>(null);
 
-  constructor(public readingService: ReadingService) {}
+  /** 从 Sidebar 选中词表时调用 */
+  onTableSelected(readingId: string) {
+    this.selectedTableId.set(readingId);
+  }
+
 }

@@ -1,40 +1,32 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, EventEmitter, Output, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReadingService } from '../../../../services/reading.service'; 
-import { VocabularyTable } from '../../../../models/vocabulary-table'; 
+import { ReadingService } from '../../../../services/reading.service';
+import { VocabularyTable } from '../../../../models/vocabulary-table';
+
+
+
 
 @Component({
   selector: 'app-vocab-sidebar',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './vocab-sidebar.component.html',
-  styleUrls: ['./vocab-sidebar.component.scss']
+  templateUrl: './vocab-sidebar.component.html'
 })
 export class VocabSidebarComponent {
-  @Input() selectedTableId: any; // signal 绑定
+
+  /** 通知父组件选中的 readingId */
   @Output() selectTable = new EventEmitter<string>();
+  
 
-  constructor(public readingService: ReadingService) {}
+  /** ⚠️ 直接订阅 service 的 signal */
+  vocabTablesSignal: Signal<VocabularyTable[]>;
 
-  get tables(): VocabularyTable[] {
-    return this.readingService.getAllVocabTables();
+  constructor(private readingService: ReadingService) {
+    this.vocabTablesSignal = this.readingService.allVocabTablesSignal;
   }
 
-  onSelectTable(tableId: string) {
-    this.selectTable.emit(tableId);
+  select(table: VocabularyTable) {
+    this.selectTable.emit(table.readingId);
   }
-
-  deleteTable(tableId: string) {
-    if (!confirm('Delete this word table only?')) return;
-    this.readingService.deleteVocabTable(tableId);
-
-    // 如果删除的是当前选中，清空选中
-    if (this.selectedTableId() === tableId) {
-      this.selectTable.emit('');
-    }
-  }
-
-  getWordCount(table: VocabularyTable): number {
-    return table.entries.length;
-  }
+  
 }
