@@ -1,16 +1,25 @@
-<div class="paragraph" *ngFor="let para of paragraphs">
+<div
+  class="paragraph"
+  *ngFor="let tokens of tokenizedParagraphs; let i = index"
+>
+  <p>
+    <ng-container *ngFor="let token of tokens">
 
-    <span 
-        class="word" 
-        *ngFor="let word of para.split(/\s+/)" 
-        (click)="onWordClick(word, para)"
-        [class.highlight]="isHighlighted(word)" 
-        [style.backgroundColor]="
-            isHighlighted(word)
-                ? getHighlightColor(word)
-                : 'transparent'
-            ">
-        {{ word }}
-    </span>
+      <!-- 真正的词汇 token -->
+      <span
+        *ngIf="token.type === 'word'; else raw"
+        class="word"
+        [style.backgroundColor]="getTokenHighlightColor(token)"
+        (click)="onTokenClick(token, paragraphs[i])"
+      >
+        {{ token.text }}
+      </span>
 
+      <!-- 空格 / 标点：原样输出，不参与逻辑 -->
+      <ng-template #raw>
+        {{ token.text }}
+      </ng-template>
+
+    </ng-container>
+  </p>
 </div>

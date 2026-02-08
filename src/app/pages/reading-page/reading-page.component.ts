@@ -6,7 +6,7 @@ import { ReadingService } from '../../services/reading.service';
 import { VocabularyTableComponent } from '../../components/vocabulary-table/vocabulary-table.component';
 import { TextDisplayComponent } from './text-display.component/text-display.component';
 import { ToggleSwitchComponent } from '../../components/toggle-switch.component/toggle-switch.component';
-import { cleanRawWord, normalizeWord } from '../../language/normalizer';
+import { normalizeWord } from '../../utils/normalizer';
 
 
 @Component({

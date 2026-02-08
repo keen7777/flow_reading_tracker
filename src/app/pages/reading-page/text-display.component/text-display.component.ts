@@ -1,6 +1,9 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WordEntry } from '../../../models/word-entry';
+import { normalizeWord } from '../../../utils/normalizer';
+import { tokenize, Token } from '../../../utils/tokenize';
+
 
 @Component({
   selector: 'app-text-display',
@@ -21,29 +24,53 @@ export class TextDisplayComponent {
     sentence: string;
   }>();
 
+  tokenizedParagraphs: Token[][] = [];
+
+  // ---------- lifecycle ----------
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['paragraphs']) {
+      this.tokenizedParagraphs = this.paragraphs.map(p =>
+        tokenize(p)
+      );
+    }
+  }
 
 
-  isHighlighted(word: string): WordEntry | undefined {
+
+  isTokenHighlighted(token: Token): WordEntry | undefined {
+    if (token.type !== 'word') return undefined;
+
+    const normalized = normalizeWord(token.text, 'en');
+    if (!normalized) return undefined;
+
     return this.highlightWords.find(
-      e => e.word.toLowerCase() === word.toLowerCase()
+      e => e.word === normalized
     );
   }
 
-  onWordClick(word: string, paragraph: string) {
-    const sentence = this.extractSentence(word, paragraph);
-    this.wordSelected.emit({ word, sentence });
+  // ---------- click logic ----------
+  onTokenClick(token: Token, paragraph: string): void {
+    if (token.type !== 'word') return;
+
+    const sentence = this.extractSentence(token.text, paragraph);
+    this.wordSelected.emit({
+      word: token.text,
+      sentence
+    });
   }
 
   private extractSentence(word: string, paragraph: string): string {
     const sentences = paragraph.split(/(?<=[.!?])/);
-    return sentences.find(s =>
-      s.toLowerCase().includes(word.toLowerCase())
-    )?.trim() || '';
+    return (
+      sentences.find(s =>
+        s.toLowerCase().includes(word.toLowerCase())
+      )?.trim() ?? ''
+    );
   }
 
   // ---------------color mode:
-  getHighlightColor(word: string): string {
-    const entry = this.isHighlighted(word);
+  getTokenHighlightColor(token: Token): string {
+    const entry = this.isTokenHighlighted(token);
     if (!entry) return 'transparent';
 
     if (this.highlightMode === 'discrete') {
