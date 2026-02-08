@@ -6,6 +6,7 @@ import { ReadingService } from '../../services/reading.service';
 import { VocabularyTableComponent } from '../../components/vocabulary-table/vocabulary-table.component';
 import { TextDisplayComponent } from './text-display.component/text-display.component';
 import { ToggleSwitchComponent } from '../../components/toggle-switch.component/toggle-switch.component';
+import { cleanRawWord, normalizeWord } from '../../language/normalizer';
 
 
 @Component({
@@ -37,7 +38,7 @@ export class ReadingPageComponent {
   constructor(
     private route: ActivatedRoute,
     private readingService: ReadingService
-  ) {}
+  ) { }
 
   /** ------------------- 初始化 ------------------- */
   ngOnInit() {
@@ -129,9 +130,12 @@ export class ReadingPageComponent {
   handleWordSelected(event: { word: string; sentence: string }) {
     if (!this.currentReadingId) return;
 
+    const normalized = normalizeWord(event.word, 'en');
+    if (!normalized) return;
+
     this.readingService.addWord(
       this.currentReadingId,
-      event.word,
+      normalized,
       event.sentence
     );
 
@@ -197,45 +201,45 @@ export class ReadingPageComponent {
   }
 
   /** ------------------- Word Table 导入 / 导出 ------------------- */
-exportWordTable() {
-  const blob = new Blob(
-    [JSON.stringify(this.wordTableSignal(), null, 2)],
-    { type: 'application/json' }
-  );
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'word_table.json';
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
-
-importWordTable(file: File) {
-  if (!this.currentReadingId) return;
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    const imported = JSON.parse(e.target?.result as string);
-
-    // 更新 service（才是“真相”）
-    this.readingService.replaceWordTable(
-      this.currentReadingId!,
-      imported
+  exportWordTable() {
+    const blob = new Blob(
+      [JSON.stringify(this.wordTableSignal(), null, 2)],
+      { type: 'application/json' }
     );
 
-    // 同步 UI
-    this.wordTableSignal.set([...imported]);
-  };
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'word_table.json';
+    a.click();
 
-  reader.readAsText(file);
-}
+    URL.revokeObjectURL(url);
+  }
 
-onImportFile(event: Event) {
-  const input = event.target as HTMLInputElement;
-  if (!input.files?.length) return;
-  this.importWordTable(input.files[0]);
-}
+  importWordTable(file: File) {
+    if (!this.currentReadingId) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      const imported = JSON.parse(e.target?.result as string);
+
+      // 更新 service（才是“真相”）
+      this.readingService.replaceWordTable(
+        this.currentReadingId!,
+        imported
+      );
+
+      // 同步 UI
+      this.wordTableSignal.set([...imported]);
+    };
+
+    reader.readAsText(file);
+  }
+
+  onImportFile(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    this.importWordTable(input.files[0]);
+  }
 
 }

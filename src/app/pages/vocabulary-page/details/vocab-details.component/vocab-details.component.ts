@@ -1,4 +1,4 @@
-import { Component, Input, Signal, effect, computed } from '@angular/core';
+import { Component, Input, Signal, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReadingService } from '../../../../services/reading.service';
 import { WordEntry } from '../../../../models/word-entry';
@@ -10,32 +10,41 @@ import { WordEntry } from '../../../../models/word-entry';
   templateUrl: './vocab-details.component.html'
 })
 export class VocabDetailsComponent {
-  /** ------------------- 输入属性 ------------------- */
-  @Input({ required: true }) tableId!: string;
 
-  /** ------------------- 自动计算的词表条目 ------------------- */
+  /** 输入属性，用 signal 包装 */
+  private _tableIdSignal = signal<string | null>(null);
+
+  @Input()
+  set tableId(value: string | null) {
+    this._tableIdSignal.set(value);
+  }
+  get tableId(): string | null {
+    return this._tableIdSignal();
+  }
+
+  /** 自动计算词表条目 */
   wordEntriesSignal: Signal<WordEntry[]>;
 
   constructor(private readingService: ReadingService) {
-    // 使用 computed 创建响应式信号
-    // 只要 tableId 或 service 内的 vocabTablesSignal 改变，都会自动更新
+    // 依赖 tableIdSignal 和 service 的 vocabTablesSignal
     this.wordEntriesSignal = computed(() => {
-      // 获取当前 tableId 对应的词表
-      const table = this.readingService.vocabTablesSignal()[this.tableId];
-      // 返回 entries，如果词表不存在则返回空数组
+      const id = this._tableIdSignal();
+      if (!id) return [];
+      const table = this.readingService.vocabTablesSignal()[id];
       return table?.entries ?? [];
     });
 
-    /** 可选：如果需要在 tableId 变化时做额外操作，可以用 effect */
+    // 可选：监听变化调试
     effect(() => {
-      const entries = this.wordEntriesSignal();
-      console.log(`VocabDetails updated, ${entries.length} words for tableId:`, this.tableId);
+      console.log(`VocabDetails updated, tableId: ${this._tableIdSignal()}, words:`, this.wordEntriesSignal().length);
     });
   }
 
-  /** 删除单词条目 */
+  /** 删除单词 */
   deleteWord(entry: WordEntry) {
+    const id = this._tableIdSignal();
+    if (!id) return;
     if (!confirm(`Delete word "${entry.word}"?`)) return;
-    this.readingService.deleteWord(this.tableId, entry.word);
+    this.readingService.deleteWord(id, entry.word);
   }
 }

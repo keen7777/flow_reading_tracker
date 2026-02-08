@@ -12,7 +12,7 @@
         <td>{{ word.word }}</td>
         <td>{{ word.count }}</td>
         <td>{{ word.lastSeenAt | date:'short' }}</td>
-        <button (click)="deleteWord(word)">Delete</button>
+        <td><button (click)="deleteWord(word)">Delete</button></td>
       </tr>
     </tbody>
   </table>
