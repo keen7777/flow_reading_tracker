@@ -9,7 +9,7 @@
   </div>
 
   <ul>
-    <li *ngFor="let entry of words">
+    <li *ngFor="let entry of sortedWords()">
       <span class="word">{{ entry.normalized }}</span>
       <span class="count">{{ entry.count }}</span>
       <span class="sentence">{{ entry.sentence }}</span>

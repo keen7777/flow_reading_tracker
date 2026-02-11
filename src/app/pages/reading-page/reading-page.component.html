@@ -30,7 +30,7 @@
   </div>
 
   <!-- word table component -->
-  <app-vocabulary-table [words]="savedWords()" [allowDelete]="true" (deleteWord)="deleteWord($event)">
+  <app-vocabulary-table [words]="savedWords()" [allowDelete]="true" [allowSort]="true" (deleteWord)="deleteWord($event)">
   </app-vocabulary-table>
 
   <!--单独查词panel-->
