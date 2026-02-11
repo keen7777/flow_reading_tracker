@@ -1,25 +1,25 @@
-<div
-  class="paragraph"
-  *ngFor="let tokens of tokenizedParagraphs; let i = index"
->
-  <p>
-    <ng-container *ngFor="let token of tokens">
+@for (tokens of tokenizedParagraphs; track $index; let i = $index) {
+  <div class="paragraph">
+    <p>
+      @for (token of tokens; track token.text + $index) {
 
-      <!-- 真正的词汇 token -->
-      <span
-        *ngIf="token.type === 'word'; else raw"
-        class="word"
-        [style.backgroundColor]="getTokenHighlightColor(token)"
-        (click)="onTokenClick(token, paragraphs[i])"
-      >
-        {{ token.text }}
-      </span>
+        @if (token.type === 'word') {
+          <span
+            class="word"
+            appWordHighlight
+            [mode]="highlightMode"
+            (leftClick)="onTokenLeftClick(token, paragraphs[i])"
+            (rightClick)="onTokenRightClick(token, paragraphs[i])"
+            [savedEntry]="savedEntriesMap[token.text]"
+            [previewEntry]="previewEntriesMap[token.text]"
+          >
+            {{ token.text }}
+          </span>
+        } @else {
+          {{ token.text }}
+        }
 
-      <!-- 空格 / 标点：原样输出，不参与逻辑 -->
-      <ng-template #raw>
-        {{ token.text }}
-      </ng-template>
-
-    </ng-container>
-  </p>
-</div>
+      }
+    </p>
+  </div>
+}

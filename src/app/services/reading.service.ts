@@ -24,6 +24,10 @@ export class ReadingService {
   readonly vocabTablesSignal =
     signal<Record<string, VocabularyTable>>({});
 
+  /** 临时词条表 signal，不存 localStorage */
+  readonly previewWordTablesSignal = signal<Record<string, WordEntry[]>>({});
+
+
   constructor() {
     this.loadFromStorage();
   }
@@ -118,36 +122,84 @@ export class ReadingService {
   // ---------- Word ----------
 
   addWord(readingId: string, word: string, sentence?: string) {
-    const now = Date.now();
+  const now = Date.now();
 
-    this.vocabTablesSignal.update(tables => {
-      const table = tables[readingId];
-      if (!table) return tables;
+  this.vocabTablesSignal.update(tables => {
+    const table = tables[readingId];
+    if (!table) return tables;
 
-      const entries = [...table.entries];
-      const existing = entries.find(e => e.word === word);
+    const exists = table.entries.some(e => e.word === word);
 
-      if (existing) {
-        existing.count++;
-        existing.lastSeenAt = now;
-      } else {
-        entries.push({
-          word,
-          count: 1,
-          firstAddedAt: now,
-          lastSeenAt: now,
-          sentence
-        });
+    // ✅ 生成全新 entries 数组
+    const newEntries = exists
+      ? table.entries.map(e =>
+          e.word === word
+            ? {
+                ...e,                     // 新对象
+                count: e.count + 1,        // 新值
+                lastSeenAt: now
+              }
+            : e
+        )
+      : [
+          ...table.entries,
+          {
+            word,
+            count: 1,
+            firstAddedAt: now,
+            lastSeenAt: now,
+            sentence,
+            isSaved: true,
+          }
+        ];
+
+    return {
+      ...tables,
+      [readingId]: {
+        ...table,
+        entries: newEntries   // 新数组引用
       }
+    };
+  });
 
-      return {
-        ...tables,
-        [readingId]: { ...table, entries }
-      };
-    });
+  this.saveToStorage();
+}
 
-    this.saveToStorage();
-  }
+
+addPreviewWord(readingId: string, word: string, sentence?: string) {
+  const now = Date.now();
+
+  this.previewWordTablesSignal.update(tables => {
+    const current = tables[readingId] ?? [];
+
+    const exists = current.some(e => e.word === word);
+
+    const newEntries = exists
+      ? current.map(e =>
+          e.word === word
+            ? { ...e, lastSeenAt: now }
+            : e
+        )
+      : [
+          ...current,
+          {
+            word,
+            count: 0,
+            firstAddedAt: now,
+            lastSeenAt: now,
+            sentence,
+            isSaved: false,
+          }
+        ];
+
+    return {
+      ...tables,
+      [readingId]: newEntries
+    };
+  });
+}
+
+
 
   deleteWord(readingId: string, word: string) {
     this.vocabTablesSignal.update(tables => {

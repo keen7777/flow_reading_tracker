@@ -28,6 +28,7 @@ export class ReadingPageComponent {
   fullTextSignal = signal<string[][]>([]);
   currentPageSignal = signal(1);
   wordTableSignal = signal<WordEntry[]>([]);
+  previewWordTableSignal = signal<WordEntry[]>([]);
   readingTitle = signal('');
 
   /** 当前 reading ID（非 signal，仅作为 key） */
@@ -63,6 +64,9 @@ export class ReadingPageComponent {
     /* ✅ 从 vocabTablesSignal 中读取词表 */
     const table = this.readingService.vocabTablesSignal()[id];
     this.wordTableSignal.set(table ? [...table.entries] : []);
+
+    console.log('wordTableSignal', this.wordTableSignal());
+    console.log('previewWordTableSignal', this.previewWordTableSignal());
   }
 
   /** ------------------- 文本分页 ------------------- */
@@ -127,11 +131,18 @@ export class ReadingPageComponent {
   }
 
   /** ------------------- 单词操作 ------------------- */
-  handleWordSelected(event: { word: string; sentence: string }) {
+  handleWordSelected(event: { word: string; sentence: string; isSaved: boolean }) {
     if (!this.currentReadingId) return;
 
     const normalized = normalizeWord(event.word, 'en');
     if (!normalized) return;
+
+    // if it's just preview word, then don't add.
+    if (!event.isSaved) {
+      return;
+    }
+
+    //if word is in saved?
 
     this.readingService.addWord(
       this.currentReadingId,
@@ -145,6 +156,45 @@ export class ReadingPageComponent {
 
     this.wordTableSignal.set(table ? [...table.entries] : []);
   }
+
+
+  handleWordSelected2(event: { word: string; sentence: string; isSaved: boolean }) {
+    if (!this.currentReadingId) return;
+    const normalized = normalizeWord(event.word, 'en');
+    if (!normalized) return;
+
+    if (event.isSaved) {
+      // 永久词条逻辑
+      this.readingService.addWord(this.currentReadingId, normalized, event.sentence);
+
+      const table = this.readingService.vocabTablesSignal()[this.currentReadingId];
+      this.wordTableSignal.set(table ? [...table.entries] : []);
+
+      // 如果之前在 preview 表里，删除它
+      this.previewWordTableSignal.update(prev => prev.filter(e => e.word !== normalized));
+
+    } else {
+      // 临时 preview 逻辑
+      const prev = this.previewWordTableSignal();
+      // 确保不重复，并且不覆盖已保存词条
+      if (!this.wordTableSignal().find(e => e.word === normalized)) {
+        const exists = prev.find(e => e.word === normalized);
+        if (!exists) {
+          this.readingService.addPreviewWord(
+            this.currentReadingId,
+            normalized,
+            event.sentence
+          );
+        }
+      }
+    }
+  }
+
+
+
+
+
+
 
   deleteWord(entry: WordEntry) {
     if (!this.currentReadingId) return;

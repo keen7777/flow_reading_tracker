@@ -5,4 +5,5 @@ export interface WordEntry {
   lastSeenAt: number;
   sentence?: string;
   definition?: string; // future usage
+  isSaved: boolean;     // 永久
 }

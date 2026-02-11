@@ -11,9 +11,10 @@
    <div class="text-display">
     <app-text-display 
     [paragraphs]="currentPageParagraphs" 
-    [highlightWords]="wordTableSignal()"
+    [savedWords]="wordTableSignal()"
+    [previewWords]="previewWordTableSignal()"
     [highlightMode]="highlightModeDiscreteSignal() ? 'discrete' : 'continuous'" 
-    (wordSelected)="handleWordSelected($event)">
+    (wordSelected)="handleWordSelected2($event)">
   </app-text-display>
    </div>
   
