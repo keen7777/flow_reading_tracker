@@ -9,7 +9,7 @@
     </thead>
     <tbody>
       <tr *ngFor="let word of wordEntriesSignal()">
-        <td>{{ word.word }}</td>
+        <td>{{ word.normalized }}</td>
         <td>{{ word.count }}</td>
         <td>{{ word.lastSeenAt | date:'short' }}</td>
         <td><button (click)="deleteWord(word)">Delete</button></td>

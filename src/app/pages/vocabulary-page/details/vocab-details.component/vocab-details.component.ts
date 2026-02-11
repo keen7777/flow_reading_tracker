@@ -44,7 +44,7 @@ export class VocabDetailsComponent {
   deleteWord(entry: WordEntry) {
     const id = this._tableIdSignal();
     if (!id) return;
-    if (!confirm(`Delete word "${entry.word}"?`)) return;
-    this.readingService.deleteWord(id, entry.word);
+    if (!confirm(`Delete word "${entry.normalized}"?`)) return;
+    this.readingService.deleteWord(id, entry.normalized);
   }
 }

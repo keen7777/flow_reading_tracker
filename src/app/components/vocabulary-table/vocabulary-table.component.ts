@@ -19,7 +19,7 @@ export class VocabularyTableComponent {
   @Output() sortChange = new EventEmitter<string>();
 
   onDelete(entry: WordEntry) {
-    if (!confirm(`Delete "${entry.word}"?`)) return;
+    if (!confirm(`Delete "${entry.normalized}"?`)) return;
     this.deleteWord.emit(entry);
   }
 

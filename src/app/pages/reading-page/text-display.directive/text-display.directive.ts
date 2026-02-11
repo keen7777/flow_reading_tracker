@@ -34,7 +34,7 @@ export class TextDisplayDirective {
       console.log(' priview  color!!!!!');
     } else if (this.savedEntry) {
       console.log('saved color!!!!!');
-      console.log(`save word: ${this.savedEntry.word}`);
+      console.log(`save word: ${this.savedEntry.normalized}`);
       console.log(`save word count: ${this.savedEntry.count}`);
       console.log(`save word save?: ${this.savedEntry.isSaved}`);
       const count = this.savedEntry.count ?? 1;
@@ -46,28 +46,6 @@ export class TextDisplayDirective {
       this.backgroundColor = 'transparent';
     }
   }
-
-
-  /** 根据词条状态绑定背景色 
-  @HostBinding('style.backgroundColor')
-  get backgroundColor(): string {
-    console.log('color!!!!!');
-    console.log(`${this.previewEntry?.normalized}`)
-    // 临时高亮（未保存）
-    if (this.previewEntry) {
-      return 'hsl(255, 81%, 79%)'; // 临时高亮色
-    }
-
-    // 永久高亮（已保存）
-    if (this.savedEntry) {
-      const count = this.savedEntry.count ?? 1;
-      return this.mode === 'discrete'
-        ? this.getDiscreteColor(this.savedEntry.count)
-        : this.getContinuousColor(this.savedEntry.count);
-    }
-    return 'transparent';
-  }
-     */
 
   private getDiscreteColor(count: number): string {
     const colors = [

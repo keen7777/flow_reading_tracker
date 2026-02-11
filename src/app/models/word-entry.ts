@@ -1,5 +1,6 @@
 export interface WordEntry {
-  word: string;
+  original: string; //new adding 
+  normalized: string; // used to be word
   count: number;
   firstAddedAt: number; // time stamp for later sorting
   lastSeenAt: number;

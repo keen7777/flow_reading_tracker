@@ -10,8 +10,8 @@
             [mode]="highlightMode"
             (leftClick)="onTokenLeftClick(token, paragraphs[i])"
             (rightClick)="onTokenRightClick(token, paragraphs[i])"
-            [savedEntry]="savedEntriesMap[token.text]"
-            [previewEntry]="previewEntriesMap[token.text]"
+            [savedEntry]="savedEntriesMap[normalizeToken(token)]"
+            [previewEntry]="previewEntriesMap[normalizeToken(token)]"
           >
             {{ token.text }}
           </span>

@@ -22,7 +22,7 @@ export class TextDisplayComponent {
 
 
   @Output() wordSelected = new EventEmitter<{
-    word: string;
+    original: string;
     sentence: string;
     isSaved: boolean;
   }>();
@@ -42,16 +42,19 @@ export class TextDisplayComponent {
       );
     }
   }
-  
+
   //转换成 Map 方便 directive 查找
   get savedEntriesMap(): Record<string, WordEntry> {
-    return Object.fromEntries(this.savedWords.map(e => [e.word, e]));
+    return Object.fromEntries(this.savedWords.map(e => [e.normalized, e]));
   }
 
   get previewEntriesMap(): Record<string, WordEntry> {
-    return Object.fromEntries(this.previewWords.map(e => [e.word, e]));
+    return Object.fromEntries(this.previewWords.map(e => [e.normalized, e]));
   }
-
+  
+  normalizeToken(token: Token): string {
+    return normalizeWord(token.text);
+  }
 
 
   /** 获取当前 token 对应的 PreviewWord 或 WordEntry */
@@ -61,7 +64,7 @@ export class TextDisplayComponent {
 
     const sentence = this.extractSentence(token.text, paragraph);
     this.wordSelected.emit({
-      word: token.text,
+      original: token.text,
       sentence,
       isSaved: false
     });
@@ -75,7 +78,7 @@ export class TextDisplayComponent {
 
     const sentence = this.extractSentence(token.text, paragraph);
     this.wordSelected.emit({
-      word: token.text,
+      original: token.text,
       sentence,
       isSaved: true
     });

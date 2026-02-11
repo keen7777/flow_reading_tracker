@@ -121,19 +121,19 @@ export class ReadingService {
 
   // ---------- Word ----------
 
-  addWord(readingId: string, word: string, sentence?: string) {
+  addWord(readingId: string, original:string, normalized: string, sentence?: string) {
   const now = Date.now();
 
   this.vocabTablesSignal.update(tables => {
     const table = tables[readingId];
     if (!table) return tables;
 
-    const exists = table.entries.some(e => e.word === word);
+    const exists = table.entries.some(e => e.normalized === normalized);
 
     // ✅ 生成全新 entries 数组
     const newEntries = exists
       ? table.entries.map(e =>
-          e.word === word
+          e.normalized === normalized
             ? {
                 ...e,                     // 新对象
                 count: e.count + 1,        // 新值
@@ -144,7 +144,8 @@ export class ReadingService {
       : [
           ...table.entries,
           {
-            word,
+            original,
+            normalized,
             count: 1,
             firstAddedAt: now,
             lastSeenAt: now,
@@ -166,24 +167,25 @@ export class ReadingService {
 }
 
 
-addPreviewWord(readingId: string, word: string, sentence?: string) {
+addPreviewWord(readingId: string, original:string, normalized: string, sentence?: string) {
   const now = Date.now();
 
   this.previewWordTablesSignal.update(tables => {
     const current = tables[readingId] ?? [];
 
-    const exists = current.some(e => e.word === word);
+    const exists = current.some(e => e.normalized === normalized);
 
     const newEntries = exists
       ? current.map(e =>
-          e.word === word
+          e.normalized === normalized
             ? { ...e, lastSeenAt: now }
             : e
         )
       : [
           ...current,
           {
-            word,
+            original,
+            normalized,
             count: 0,
             firstAddedAt: now,
             lastSeenAt: now,
@@ -210,7 +212,7 @@ addPreviewWord(readingId: string, word: string, sentence?: string) {
         ...tables,
         [readingId]: {
           ...table,
-          entries: table.entries.filter(e => e.word !== word)
+          entries: table.entries.filter(e => e.normalized !== word)
         }
       };
     });

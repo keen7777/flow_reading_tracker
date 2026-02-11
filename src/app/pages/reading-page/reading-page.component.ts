@@ -143,55 +143,21 @@ export class ReadingPageComponent {
     }
   }
 
-  /** ------------------- 单词操作 ------------------- */
-  /*
-  handleWordSelected(event: { word: string; sentence: string; isSaved: boolean }) {
-    if (!this.currentReadingId) return;
-    const normalized = normalizeWord(event.word, 'en');
-    if (!normalized) return;
-
-    if (event.isSaved) {
-      // 永久词条逻辑
-      this.readingService.addWord(this.currentReadingId, normalized, event.sentence);
-
-      const table = this.readingService.vocabTablesSignal()[this.currentReadingId];
-      this.wordTableSignal.set(table ? [...table.entries] : []);
-
-      // 如果之前在 preview 表里，删除它
-      this.previewWordTableSignal.update(prev => prev.filter(e => e.word !== normalized));
-
-    } else {
-      // 临时 preview 逻辑
-      const prev = this.previewWordTableSignal();
-      // 确保不重复，并且不覆盖已保存词条
-      if (!this.wordTableSignal().find(e => e.word === normalized)) {
-        const exists = prev.find(e => e.word === normalized);
-        if (!exists) {
-          this.readingService.addPreviewWord(
-            this.currentReadingId,
-            normalized,
-            event.sentence
-          );
-        }
-      }
-    }
-  }
-  */
-
   handleWordSelected(event: {
-    word: string;
+    original: string;
     sentence: string;
     isSaved: boolean;
   }) {
     if (!this.currentReadingId) return;
 
-    const normalized = normalizeWord(event.word, 'en');
+    const normalized = normalizeWord(event.original, 'en');
     if (!normalized) return;
 
     if (event.isSaved) {
       // ✅ 添加到永久词条
       this.readingService.addWord(
         this.currentReadingId,
+        event.original,
         normalized,
         event.sentence
       );
@@ -203,7 +169,7 @@ export class ReadingPageComponent {
         return {
           ...tables,
           [this.currentReadingId!]:
-            current.filter(e => e.word !== normalized)
+            current.filter(e => e.normalized !== normalized)
         };
       });
 
@@ -211,11 +177,12 @@ export class ReadingPageComponent {
 
       // 如果已经是 saved，不加入 preview
       const alreadySaved =
-        this.savedWords().some(e => e.word === normalized);
+        this.savedWords().some(e => e.normalized === normalized);
 
       if (!alreadySaved) {
         this.readingService.addPreviewWord(
           this.currentReadingId,
+          event.original,
           normalized,
           event.sentence
         );
@@ -228,63 +195,44 @@ export class ReadingPageComponent {
 
     this.readingService.deleteWord(
       this.currentReadingId,
-      entry.word
+      entry.normalized
     );
   }
 
 
-
-
-
-
-  /*
-    deleteWord(entry: WordEntry) {
-      if (!this.currentReadingId) return;
-  
-      this.readingService.deleteWord(
-        this.currentReadingId,
-        entry.word
-      );
-      const table =
-        this.readingService.vocabTablesSignal()[this.currentReadingId];
-      this.wordTableSignal.set(table ? [...table.entries] : []);
-    }
-  */
-
   /** ------------------- 本地文件上传 ------------------- */
- /** ------------------- 本地文件上传 ------------------- */
-onFileSelected(event: Event) {
-  const input = event.target as HTMLInputElement;
-  if (!input.files?.length) return;
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
 
-  const file = input.files[0];
-  const reader = new FileReader();
+    const file = input.files[0];
+    const reader = new FileReader();
 
-  reader.onload = e => {
-    const text = e.target?.result as string;
-    if (!text) return;
+    reader.onload = e => {
+      const text = e.target?.result as string;
+      if (!text) return;
 
-    // 1️⃣ 让用户输入标题（如果取消则使用文件名）
-    const title =
-      prompt('Enter a title for this reading:') || file.name;
+      // 1️⃣ 让用户输入标题（如果取消则使用文件名）
+      const title =
+        prompt('Enter a title for this reading:') || file.name;
 
-    // 2️⃣ 永远创建新的 reading
-    const newReading =
-      this.readingService.addNewReading({
-        title,
-        content: text
-      });
+      // 2️⃣ 永远创建新的 reading
+      const newReading =
+        this.readingService.addNewReading({
+          title,
+          content: text
+        });
 
-    // 3️⃣ 切换当前 reading
-    this.currentReadingId = newReading.id;
-    this.readingTitle.set(newReading.title);
+      // 3️⃣ 切换当前 reading
+      this.currentReadingId = newReading.id;
+      this.readingTitle.set(newReading.title);
 
-    // 4️⃣ 加载文本分页
-    this.loadText(text);
-  };
+      // 4️⃣ 加载文本分页
+      this.loadText(text);
+    };
 
-  reader.readAsText(file);
-}
+    reader.readAsText(file);
+  }
 
 
   /** ------------------- 进度 ------------------- */
@@ -295,65 +243,64 @@ onFileSelected(event: Event) {
     );
   }
 
-  /** ------------------- Word Table 导入 / 导出 ------------------- */
   /** ------------------- Word Table 导出 ------------------- */
-exportWordTable() {
-  if (!this.currentReadingId) return;
+  exportWordTable() {
+    if (!this.currentReadingId) return;
 
-  // 1️⃣ 从 service 读取真实数据
-  const table =
-    this.readingService
-      .vocabTablesSignal()[this.currentReadingId];
+    // 1️⃣ 从 service 读取真实数据
+    const table =
+      this.readingService
+        .vocabTablesSignal()[this.currentReadingId];
 
-  const entries = table?.entries ?? [];
+    const entries = table?.entries ?? [];
 
-  // 2️⃣ 生成 JSON 文件
-  const blob = new Blob(
-    [JSON.stringify(entries, null, 2)],
-    { type: 'application/json' }
-  );
+    // 2️⃣ 生成 JSON 文件
+    const blob = new Blob(
+      [JSON.stringify(entries, null, 2)],
+      { type: 'application/json' }
+    );
 
-  const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
 
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${this.readingTitle()}_word_table.json`;
-  a.click();
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${this.readingTitle()}_word_table.json`;
+    a.click();
 
-  URL.revokeObjectURL(url);
-}
-/** ------------------- Word Table 导入 ------------------- */
-importWordTable(file: File) {
-  if (!this.currentReadingId) return;
+    URL.revokeObjectURL(url);
+  }
+  /** ------------------- Word Table 导入 ------------------- */
+  importWordTable(file: File) {
+    if (!this.currentReadingId) return;
 
-  const reader = new FileReader();
+    const reader = new FileReader();
 
-  reader.onload = e => {
-    try {
-      const imported = JSON.parse(e.target?.result as string);
+    reader.onload = e => {
+      try {
+        const imported = JSON.parse(e.target?.result as string);
 
-      // 1️⃣ 基本结构校验（防止崩溃）
-      if (!Array.isArray(imported)) {
-        alert('Invalid word table format.');
-        return;
+        // 1️⃣ 基本结构校验（防止崩溃）
+        if (!Array.isArray(imported)) {
+          alert('Invalid word table format.');
+          return;
+        }
+
+        // 2️⃣ 更新 service（唯一数据源）
+        this.readingService.replaceWordTable(
+          this.currentReadingId!,
+          imported
+        );
+
+        alert('Word table imported successfully.');
+
+      } catch (err) {
+        alert('Failed to import word table.');
+        console.error(err);
       }
+    };
 
-      // 2️⃣ 更新 service（唯一数据源）
-      this.readingService.replaceWordTable(
-        this.currentReadingId!,
-        imported
-      );
-
-      alert('Word table imported successfully.');
-
-    } catch (err) {
-      alert('Failed to import word table.');
-      console.error(err);
-    }
-  };
-
-  reader.readAsText(file);
-}
+    reader.readAsText(file);
+  }
 
 
   onImportFile(event: Event) {
