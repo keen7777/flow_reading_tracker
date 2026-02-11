@@ -28,6 +28,8 @@ export class ReadingPageComponent {
   fullTextSignal = signal<string[][]>([]);
   currentPageSignal = signal(1);
   readingTitle = signal('');
+  //新增加的当前选中单词：
+  currentSelectedWordEntry = signal<WordEntry | null>(null);
   // get from service:
   /** ✅ 永久词条（直接从 service 读取） */
   savedWords = computed(() => {
@@ -152,6 +154,17 @@ export class ReadingPageComponent {
 
     const normalized = normalizeWord(event.original, 'en');
     if (!normalized) return;
+
+    //更新当前选中单词：
+    this.currentSelectedWordEntry.set({
+      original: event.original,
+      normalized,
+      count: -1,
+      firstAddedAt: 0,
+      lastSeenAt: 0,
+      sentence: event.sentence,
+      isSaved: false,
+    });
 
     if (event.isSaved) {
       // ✅ 添加到永久词条

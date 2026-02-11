@@ -1,23 +1,18 @@
 <div class="reading-page">
   <h2>Reading Page</h2>
   <!-- color btn display -->
-  <app-toggle-switch 
-    label="Dark Mode" 
-    [checked]="highlightModeDiscreteSignal()"
+  <app-toggle-switch label="Dark Mode" [checked]="highlightModeDiscreteSignal()"
     (checkedChange)="highlightModeDiscreteSignal.set($event)">
   </app-toggle-switch>
-  
+
   <!-- test text display -->
-   <div class="text-display">
-    <app-text-display 
-    [paragraphs]="currentPageParagraphs" 
-    [savedWords]="savedWords()"
-    [previewWords]="previewWords()"
-    [highlightMode]="highlightModeDiscreteSignal() ? 'discrete' : 'continuous'" 
-    (wordSelected)="handleWordSelected($event)">
-  </app-text-display>
-   </div>
-  
+  <div class="text-display">
+    <app-text-display [paragraphs]="currentPageParagraphs" [savedWords]="savedWords()" [previewWords]="previewWords()"
+      [highlightMode]="highlightModeDiscreteSignal() ? 'discrete' : 'continuous'"
+      (wordSelected)="handleWordSelected($event)">
+    </app-text-display>
+  </div>
+
 
 
 
@@ -37,6 +32,13 @@
   <!-- word table component -->
   <app-vocabulary-table [words]="savedWords()" [allowDelete]="true" (deleteWord)="deleteWord($event)">
   </app-vocabulary-table>
+
+  <!--单独查词panel-->
+  <div>
+    currentWord:{{currentSelectedWordEntry()?.normalized}}
+  </div>
+
+
 
 
   <!-- word table import and export -->

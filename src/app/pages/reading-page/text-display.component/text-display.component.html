@@ -12,11 +12,9 @@
             (rightClick)="onTokenRightClick(token, paragraphs[i])"
             [savedEntry]="savedEntriesMap[normalizeToken(token)]"
             [previewEntry]="previewEntriesMap[normalizeToken(token)]"
-          >
-            {{ token.text }}
-          </span>
+          >{{token.text}}</span>
         } @else {
-          {{ token.text }}
+          {{token.text}}
         }
 
       }
