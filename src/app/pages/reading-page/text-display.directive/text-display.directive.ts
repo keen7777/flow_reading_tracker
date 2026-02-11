@@ -30,7 +30,7 @@ export class TextDisplayDirective {
   }
   private updateBackground() {
     if (this.previewEntry) {
-      this.backgroundColor = 'hsl(0, 72%, 57%)';
+      this.backgroundColor = 'hsl(272, 95%, 78%)';
       console.log(' priview  color!!!!!');
     } else if (this.savedEntry) {
       console.log('saved color!!!!!');

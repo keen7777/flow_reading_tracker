@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { WordEntry } from '../../models/word-entry';
@@ -27,9 +27,28 @@ export class ReadingPageComponent {
   highlightModeDiscreteSignal = signal(false);
   fullTextSignal = signal<string[][]>([]);
   currentPageSignal = signal(1);
-  wordTableSignal = signal<WordEntry[]>([]);
-  previewWordTableSignal = signal<WordEntry[]>([]);
   readingTitle = signal('');
+  // get from service:
+  /** ✅ 永久词条（直接从 service 读取） */
+  savedWords = computed(() => {
+    if (!this.currentReadingId) return [];
+
+    return (
+      this.readingService
+        .vocabTablesSignal()[this.currentReadingId]?.entries ?? []
+    );
+  });
+
+  /** ✅ 临时词条（直接从 service 读取） */
+  previewWords = computed(() => {
+    if (!this.currentReadingId) return [];
+
+    return (
+      this.readingService
+        .previewWordTablesSignal()[this.currentReadingId] ?? []
+    );
+  });
+
 
   /** 当前 reading ID（非 signal，仅作为 key） */
   currentReadingId: string | null = null;
@@ -61,12 +80,6 @@ export class ReadingPageComponent {
       this.loadText(reading.content);
     }
 
-    /* ✅ 从 vocabTablesSignal 中读取词表 */
-    const table = this.readingService.vocabTablesSignal()[id];
-    this.wordTableSignal.set(table ? [...table.entries] : []);
-
-    console.log('wordTableSignal', this.wordTableSignal());
-    console.log('previewWordTableSignal', this.previewWordTableSignal());
   }
 
   /** ------------------- 文本分页 ------------------- */
@@ -131,34 +144,8 @@ export class ReadingPageComponent {
   }
 
   /** ------------------- 单词操作 ------------------- */
+  /*
   handleWordSelected(event: { word: string; sentence: string; isSaved: boolean }) {
-    if (!this.currentReadingId) return;
-
-    const normalized = normalizeWord(event.word, 'en');
-    if (!normalized) return;
-
-    // if it's just preview word, then don't add.
-    if (!event.isSaved) {
-      return;
-    }
-
-    //if word is in saved?
-
-    this.readingService.addWord(
-      this.currentReadingId,
-      normalized,
-      event.sentence
-    );
-
-    /* ✅ 每次都从 service 同步最新 entries */
-    const table =
-      this.readingService.vocabTablesSignal()[this.currentReadingId];
-
-    this.wordTableSignal.set(table ? [...table.entries] : []);
-  }
-
-
-  handleWordSelected2(event: { word: string; sentence: string; isSaved: boolean }) {
     if (!this.currentReadingId) return;
     const normalized = normalizeWord(event.word, 'en');
     if (!normalized) return;
@@ -189,12 +176,52 @@ export class ReadingPageComponent {
       }
     }
   }
+  */
 
+  handleWordSelected(event: {
+    word: string;
+    sentence: string;
+    isSaved: boolean;
+  }) {
+    if (!this.currentReadingId) return;
 
+    const normalized = normalizeWord(event.word, 'en');
+    if (!normalized) return;
 
+    if (event.isSaved) {
+      // ✅ 添加到永久词条
+      this.readingService.addWord(
+        this.currentReadingId,
+        normalized,
+        event.sentence
+      );
 
+      // ✅ 从 preview 移除（如果存在）
+      this.readingService.previewWordTablesSignal.update(tables => {
+        const current = tables[this.currentReadingId!] ?? [];
 
+        return {
+          ...tables,
+          [this.currentReadingId!]:
+            current.filter(e => e.word !== normalized)
+        };
+      });
 
+    } else {
+
+      // 如果已经是 saved，不加入 preview
+      const alreadySaved =
+        this.savedWords().some(e => e.word === normalized);
+
+      if (!alreadySaved) {
+        this.readingService.addPreviewWord(
+          this.currentReadingId,
+          normalized,
+          event.sentence
+        );
+      }
+    }
+  }
 
   deleteWord(entry: WordEntry) {
     if (!this.currentReadingId) return;
@@ -203,44 +230,62 @@ export class ReadingPageComponent {
       this.currentReadingId,
       entry.word
     );
-
-    const table =
-      this.readingService.vocabTablesSignal()[this.currentReadingId];
-
-    this.wordTableSignal.set(table ? [...table.entries] : []);
   }
+
+
+
+
+
+
+  /*
+    deleteWord(entry: WordEntry) {
+      if (!this.currentReadingId) return;
+  
+      this.readingService.deleteWord(
+        this.currentReadingId,
+        entry.word
+      );
+      const table =
+        this.readingService.vocabTablesSignal()[this.currentReadingId];
+      this.wordTableSignal.set(table ? [...table.entries] : []);
+    }
+  */
 
   /** ------------------- 本地文件上传 ------------------- */
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (!input.files?.length) return;
+ /** ------------------- 本地文件上传 ------------------- */
+onFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement;
+  if (!input.files?.length) return;
 
-    const file = input.files[0];
-    const reader = new FileReader();
+  const file = input.files[0];
+  const reader = new FileReader();
 
-    reader.onload = e => {
-      const text = e.target?.result as string;
-      if (!text) return;
+  reader.onload = e => {
+    const text = e.target?.result as string;
+    if (!text) return;
 
-      if (this.currentReadingId) {
-        this.loadText(text);
-      } else {
-        const title =
-          prompt('Enter a title for this reading:') || file.name;
+    // 1️⃣ 让用户输入标题（如果取消则使用文件名）
+    const title =
+      prompt('Enter a title for this reading:') || file.name;
 
-        const newReading =
-          this.readingService.addNewReading({ title, content: text });
+    // 2️⃣ 永远创建新的 reading
+    const newReading =
+      this.readingService.addNewReading({
+        title,
+        content: text
+      });
 
-        this.currentReadingId = newReading.id;
-        this.readingTitle.set(newReading.title);
-        this.loadText(text);
-      }
+    // 3️⃣ 切换当前 reading
+    this.currentReadingId = newReading.id;
+    this.readingTitle.set(newReading.title);
 
-      this.wordTableSignal.set([]);
-    };
+    // 4️⃣ 加载文本分页
+    this.loadText(text);
+  };
 
-    reader.readAsText(file);
-  }
+  reader.readAsText(file);
+}
+
 
   /** ------------------- 进度 ------------------- */
   getProgressPercent(): number {
@@ -251,40 +296,65 @@ export class ReadingPageComponent {
   }
 
   /** ------------------- Word Table 导入 / 导出 ------------------- */
-  exportWordTable() {
-    const blob = new Blob(
-      [JSON.stringify(this.wordTableSignal(), null, 2)],
-      { type: 'application/json' }
-    );
+  /** ------------------- Word Table 导出 ------------------- */
+exportWordTable() {
+  if (!this.currentReadingId) return;
 
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'word_table.json';
-    a.click();
+  // 1️⃣ 从 service 读取真实数据
+  const table =
+    this.readingService
+      .vocabTablesSignal()[this.currentReadingId];
 
-    URL.revokeObjectURL(url);
-  }
+  const entries = table?.entries ?? [];
 
-  importWordTable(file: File) {
-    if (!this.currentReadingId) return;
+  // 2️⃣ 生成 JSON 文件
+  const blob = new Blob(
+    [JSON.stringify(entries, null, 2)],
+    { type: 'application/json' }
+  );
 
-    const reader = new FileReader();
-    reader.onload = e => {
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${this.readingTitle()}_word_table.json`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+/** ------------------- Word Table 导入 ------------------- */
+importWordTable(file: File) {
+  if (!this.currentReadingId) return;
+
+  const reader = new FileReader();
+
+  reader.onload = e => {
+    try {
       const imported = JSON.parse(e.target?.result as string);
 
-      // 更新 service（才是“真相”）
+      // 1️⃣ 基本结构校验（防止崩溃）
+      if (!Array.isArray(imported)) {
+        alert('Invalid word table format.');
+        return;
+      }
+
+      // 2️⃣ 更新 service（唯一数据源）
       this.readingService.replaceWordTable(
         this.currentReadingId!,
         imported
       );
 
-      // 同步 UI
-      this.wordTableSignal.set([...imported]);
-    };
+      alert('Word table imported successfully.');
 
-    reader.readAsText(file);
-  }
+    } catch (err) {
+      alert('Failed to import word table.');
+      console.error(err);
+    }
+  };
+
+  reader.readAsText(file);
+}
+
 
   onImportFile(event: Event) {
     const input = event.target as HTMLInputElement;
