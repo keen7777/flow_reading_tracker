@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { WordEntry } from '../../models/word-entry';
 import { ReadingService } from '../../services/reading.service';
+import { DictionaryService } from '../../services/dictionary.service';
+
 import { VocabularyTableComponent } from '../../components/vocabulary-table/vocabulary-table.component';
 import { TextDisplayComponent } from './text-display.component/text-display.component';
 import { ToggleSwitchComponent } from '../../components/toggle-switch.component/toggle-switch.component';
@@ -30,6 +32,8 @@ export class ReadingPageComponent {
   readingTitle = signal('');
   //新增加的当前选中单词：
   currentSelectedWordEntry = signal<WordEntry | null>(null);
+
+
   // get from service:
   /** ✅ 永久词条（直接从 service 读取） */
   savedWords = computed(() => {
@@ -59,7 +63,8 @@ export class ReadingPageComponent {
 
   constructor(
     private route: ActivatedRoute,
-    private readingService: ReadingService
+    private readingService: ReadingService,
+    private dictionaryService: DictionaryService
   ) { }
 
   /** ------------------- 初始化 ------------------- */
@@ -164,7 +169,19 @@ export class ReadingPageComponent {
       lastSeenAt: 0,
       sentence: event.sentence,
       isSaved: false,
+      definition: 'Loading...'
     });
+
+    //查字典：
+    // 调用 service
+    this.dictionaryService
+      .fetchDefinition(normalized)
+      .subscribe(definition => {
+
+        this.currentSelectedWordEntry.update(entry =>
+          entry ? { ...entry, definition } : null
+        );
+      });
 
     if (event.isSaved) {
       // ✅ 添加到永久词条
