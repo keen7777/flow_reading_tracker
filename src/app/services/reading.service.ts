@@ -121,7 +121,7 @@ export class ReadingService {
 
   // ---------- Word ----------
 
-  addWord(readingId: string, original:string, normalized: string, sentence?: string) {
+  addWord(readingId: string, original:string, normalized: string, sentence?: string, definition?:string) {
   const now = Date.now();
 
   this.vocabTablesSignal.update(tables => {
@@ -135,7 +135,7 @@ export class ReadingService {
       ? table.entries.map(e =>
           e.normalized === normalized
             ? {
-                ...e,                     // 新对象
+                ...e,                     // 新对象(为了配合响应式，只是cnt++)
                 count: e.count + 1,        // 新值
                 lastSeenAt: now
               }
@@ -150,6 +150,7 @@ export class ReadingService {
             firstAddedAt: now,
             lastSeenAt: now,
             sentence,
+            definition,
             isSaved: true,
           }
         ];
@@ -167,7 +168,7 @@ export class ReadingService {
 }
 
 
-addPreviewWord(readingId: string, original:string, normalized: string, sentence?: string) {
+addPreviewWord(readingId: string, original:string, normalized: string, sentence?: string,definition?:string) {
   const now = Date.now();
 
   this.previewWordTablesSignal.update(tables => {
@@ -190,6 +191,7 @@ addPreviewWord(readingId: string, original:string, normalized: string, sentence?
             firstAddedAt: now,
             lastSeenAt: now,
             sentence,
+            definition,
             isSaved: false,
           }
         ];

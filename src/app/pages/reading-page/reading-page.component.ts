@@ -9,6 +9,7 @@ import { VocabularyTableComponent } from '../../components/vocabulary-table/voca
 import { TextDisplayComponent } from './text-display.component/text-display.component';
 import { ToggleSwitchComponent } from '../../components/toggle-switch.component/toggle-switch.component';
 import { normalizeWord } from '../../utils/normalizer';
+import { firstValueFrom } from 'rxjs';
 
 
 @Component({
@@ -150,74 +151,98 @@ export class ReadingPageComponent {
     }
   }
 
-  handleWordSelected(event: {
+  async handleWordSelected(event: {
     original: string;
     sentence: string;
     isSaved: boolean;
   }) {
     if (!this.currentReadingId) return;
-
     const normalized = normalizeWord(event.original, 'en');
     if (!normalized) return;
 
-    //更新当前选中单词：
-    this.currentSelectedWordEntry.set({
-      original: event.original,
-      normalized,
-      count: -1,
-      firstAddedAt: 0,
-      lastSeenAt: 0,
-      sentence: event.sentence,
-      isSaved: false,
-      definition: 'Loading...'
-    });
+    //先检查是否在preview/saved表里，在的话直接取已经存在的词set进current内，不（查词+存def）
+    //不在的话，查词，fetch,存释义，更新
+    const previewExisting =
+      this.previewWords().find(e => e.normalized === normalized)
+      ?? null;
 
-    //查字典：
-    // 调用 service
-    this.dictionaryService
-      .fetchDefinition(normalized)
-      .subscribe(definition => {
+    const savedExisting =
+      this.savedWords().find(e => e.normalized === normalized)
+      ?? null;
 
-        this.currentSelectedWordEntry.update(entry =>
-          entry ? { ...entry, definition } : null
+    if (previewExisting && (!event.isSaved)) {
+      // if current word is in preview and this time we don't want to saved it(leftclick) 
+      this.currentSelectedWordEntry.set(previewExisting);
+      this.readingService.addPreviewWord(
+          this.currentReadingId,
+          event.original,
+          normalized,
+          event.sentence,
         );
-      });
-
-    if (event.isSaved) {
+    } else if (savedExisting) {
+      this.currentSelectedWordEntry.set(savedExisting);
       // ✅ 添加到永久词条
-      this.readingService.addWord(
-        this.currentReadingId,
-        event.original,
-        normalized,
-        event.sentence
-      );
-
-      // ✅ 从 preview 移除（如果存在）
-      this.readingService.previewWordTablesSignal.update(tables => {
-        const current = tables[this.currentReadingId!] ?? [];
-
-        return {
-          ...tables,
-          [this.currentReadingId!]:
-            current.filter(e => e.normalized !== normalized)
-        };
-      });
-
-    } else {
-
-      // 如果已经是 saved，不加入 preview
-      const alreadySaved =
-        this.savedWords().some(e => e.normalized === normalized);
-
-      if (!alreadySaved) {
-        this.readingService.addPreviewWord(
+        this.readingService.addWord(
           this.currentReadingId,
           event.original,
           normalized,
           event.sentence
         );
+    } else {
+      //查询释义
+      const definition = await this.loadDefinition(normalized);
+      const newWord: WordEntry = {
+        original: event.original,
+        normalized,
+        count: -1,
+        firstAddedAt: 0,
+        lastSeenAt: 0,
+        sentence: event.sentence,
+        isSaved: false,
+        definition
+      };
+      this.currentSelectedWordEntry.set(newWord);
+      // either add to preview or saved
+      if (event.isSaved) {
+        // ✅ 添加到永久词条
+        this.readingService.addWord(
+          this.currentReadingId,
+          event.original,
+          normalized,
+          event.sentence,
+          definition
+        );
+
+        // ✅ 从 preview 移除（如果存在）
+        this.readingService.previewWordTablesSignal.update(tables => {
+          const current = tables[this.currentReadingId!] ?? [];
+
+          return {
+            ...tables,
+            [this.currentReadingId!]:
+              current.filter(e => e.normalized !== normalized)
+          };
+        });
+
+      } else if (!event.isSaved) {
+        // 如果状态是preview     
+        this.readingService.addPreviewWord(
+          this.currentReadingId,
+          event.original,
+          normalized,
+          event.sentence,
+          definition
+        );
+
       }
     }
+  }
+
+  // 用promise来fetch释义
+  private async loadDefinition(normalized: string): Promise<string> {
+    return await firstValueFrom(
+      this.dictionaryService.fetchDefinition(normalized)
+    );
   }
 
   deleteWord(entry: WordEntry) {

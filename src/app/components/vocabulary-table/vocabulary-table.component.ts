@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, input} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WordEntry } from '../../models/word-entry';
 
@@ -10,7 +10,7 @@ import { WordEntry } from '../../models/word-entry';
   styleUrls: ['./vocabulary-table.component.scss'],
 })
 export class VocabularyTableComponent {
-  @Input() words: WordEntry[] = [];
+  words = input<WordEntry[]>([]);
 
   @Input() allowDelete = false;
   @Input() allowSort = false;
@@ -23,7 +23,7 @@ export class VocabularyTableComponent {
 
   // 排序后的列表
   sortedWords = computed(() => {
-    const wordsCopy = [...this.words];
+    const wordsCopy = [...this.words()];
     switch (this.sortType()) {
       case 'firstSeen':
         return wordsCopy.sort((a, b) => (a.firstAddedAt ?? 0) - (b.firstAddedAt ?? 0));

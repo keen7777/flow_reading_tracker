@@ -68,9 +68,6 @@ export class TextDisplayComponent {
       sentence,
       isSaved: false
     });
-    console.log(`left click:${token.text}`);
-    console.log(`left click:${sentence}`);
-    //this.previewEntries[token.text] = preview;
   }
 
   onTokenRightClick(token: Token, paragraph: string): void {
@@ -82,8 +79,6 @@ export class TextDisplayComponent {
       sentence,
       isSaved: true
     });
-    console.log(`right click:${token.text}`)
-    console.log(`right click:${sentence}`)
   }
 
   private extractSentence(word: string, paragraph: string): string {
@@ -94,8 +89,5 @@ export class TextDisplayComponent {
       )?.trim() ?? ''
     );
   }
-
-
-
 
 }
