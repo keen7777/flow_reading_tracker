@@ -2,8 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-console.log('DIST_FOLDER exists?', fs.existsSync(DIST_FOLDER));
-console.log('DIST_FOLDER content:', fs.readdirSync(path.dirname(DIST_FOLDER)));
+
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -11,6 +10,8 @@ const __dirname = path.dirname(__filename);
 
 // Angular build 输出目录
 const DIST_FOLDER = path.join(__dirname, 'dist/flow-reading-tracker');
+console.log('DIST_FOLDER exists?', fs.existsSync(DIST_FOLDER));
+console.log('DIST_FOLDER content:', fs.readdirSync(path.dirname(DIST_FOLDER)));
 
 // Serve 静态文件
 app.use(express.static(DIST_FOLDER));
