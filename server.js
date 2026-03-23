@@ -1,6 +1,9 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
+console.log('DIST_FOLDER exists?', fs.existsSync(DIST_FOLDER));
+console.log('DIST_FOLDER content:', fs.readdirSync(path.dirname(DIST_FOLDER)));
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
