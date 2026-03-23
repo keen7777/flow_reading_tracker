@@ -14,11 +14,12 @@ app.use(express.static(DIST_FOLDER));
 
 // 所有前端路由 fallback 到 index.html
 app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(DIST_FOLDER, 'index.html'));
+    console.log(`[FALLBACK] ${req.method} ${req.url}`);
+    res.sendFile(path.join(DIST_FOLDER, 'index.html'));
 });
 
 // 端口
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log(`Angular SPA server running on port ${PORT}`);
+    console.log(`Angular SPA server running on port ${PORT}`);
 });
