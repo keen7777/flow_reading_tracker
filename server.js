@@ -13,7 +13,7 @@ const DIST_FOLDER = path.join(__dirname, 'dist/flow-reading-tracker');
 app.use(express.static(DIST_FOLDER));
 
 // 所有前端路由 fallback 到 index.html
-app.get('*', (req, res) => {
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(DIST_FOLDER, 'index.html'));
 });
 
